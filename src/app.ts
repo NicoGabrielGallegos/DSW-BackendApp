@@ -51,6 +51,7 @@ app.put("/api/alumnos/:legajoAlumno", sanitizeInputAlumno, (req, res) => {
         return
     }
     alumnos[aluIdx] = {...alumnos[aluIdx], ...req.body.sanitizedInput}
+    // Alt // Object.assign(alumnos[aluIdx], req.body.sanitizedInput)
     res.status(200).send({message: "Alumno modificado con éxito", data: alumnos[aluIdx]})
 })
 
@@ -61,6 +62,7 @@ app.patch("/api/alumnos/:legajoAlumno", sanitizeInputAlumno, (req, res) => {
         return
     }
     alumnos[aluIdx] = {...alumnos[aluIdx], ...req.body.sanitizedInput}
+    // Alt // Object.assign(alumnos[aluIdx], req.body.sanitizedInput)
     res.status(200).send({message: "Alumno modificado con éxito", data: alumnos[aluIdx]})
 })
 
@@ -72,6 +74,10 @@ app.delete("/api/alumnos/:legajoAlumno", (req, res) => {
     }
     alumnos.splice(aluIdx, 1)
     res.status(200).send({message: "Alumno borrado con éxito"})
+})
+
+app.use((_req, res) => {
+    res.status(404).send({message: "Recurso no encontrado"})
 })
 
 app.listen(3000, () => {
