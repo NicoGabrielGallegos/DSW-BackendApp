@@ -1,0 +1,23 @@
+{
+  "name": "DSW-BackendApp",
+  "version": "1.0.0",
+  "type": "module",
+  "description": "",
+  "main": "app.js",
+  "scripts": {
+    "start:dev": "tsc-watch --noClear -p ./tsconfig.json --onSuccess \"node ./dist/app.js\""
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "packageManager": "pnpm@10.7.0",
+  "dependencies": {
+    "express": "5.1.0"
+  },
+  "devDependencies": {
+    "@types/express": "5.0.1",
+    "@types/node": "22.14.1",
+    "tsc-watch": "6.2.1",
+    "typescript": "5.8.3"
+  }
+}
