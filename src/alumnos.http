@@ -32,3 +32,6 @@ Content-Type: application/json
     "nombre": "Francisco",
     "apellido": "Juarez"
 }
+
+### Borrar un alumno
+DELETE http://localhost:3000/api/alumnos/bcff2a7b-b199-4f3b-9a92-fcbd1d250ee1

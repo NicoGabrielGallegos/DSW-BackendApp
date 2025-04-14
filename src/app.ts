@@ -55,13 +55,23 @@ app.put("/api/alumnos/:legajoAlumno", sanitizeInputAlumno, (req, res) => {
 })
 
 app.patch("/api/alumnos/:legajoAlumno", sanitizeInputAlumno, (req, res) => {
-    const aluIdx = alumnos.findIndex((alu => alu.legajoAlumno === req.params.legajoAlumno))
+    const aluIdx = alumnos.findIndex((alu) => alu.legajoAlumno === req.params.legajoAlumno)
     if (aluIdx === -1) {
         res.status(404).send({message: "Alumno no encontrado"})
         return
     }
     alumnos[aluIdx] = {...alumnos[aluIdx], ...req.body.sanitizedInput}
     res.status(200).send({message: "Alumno modificado con éxito", data: alumnos[aluIdx]})
+})
+
+app.delete("/api/alumnos/:legajoAlumno", (req, res) => {
+    const aluIdx = alumnos.findIndex((alu) => alu.legajoAlumno === req.params.legajoAlumno)
+    if (aluIdx === -1) {
+        res.status(404).send({message: "Alumno no encontrado"})
+        return
+    }
+    alumnos.splice(aluIdx, 1)
+    res.status(200).send({message: "Alumno borrado con éxito"})
 })
 
 app.listen(3000, () => {
