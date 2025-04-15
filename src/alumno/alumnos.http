@@ -2,7 +2,7 @@
 GET http://localhost:3000/api/alumnos
 
 ### Obtener un alumno
-GET http://localhost:3000/api/alumnos/1
+GET http://localhost:3000/api/alumnos/bcff2a7b-b199-4f3b-9a92-fcbd1d250ee1
 
 ### Crear un alumno
 POST http://localhost:3000/api/alumnos
