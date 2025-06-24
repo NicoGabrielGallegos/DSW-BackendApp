@@ -9,9 +9,9 @@ POST http://localhost:3000/api/alumnos
 Content-Type: application/json
 
 {
-    "nombre": "Olivia",
-    "apellido": "Frías",
-    "correo": "friasolivia@gmail.com"
+    "nombre": "Sam",
+    "apellido": "Clemens",
+    "correo": "samclemens@gmail.com"
 }
 
 ### Modificar un alumno (total)
@@ -19,9 +19,9 @@ PUT http://localhost:3000/api/alumnos/bcff2a7b-b199-4f3b-9a92-fcbd1d250ee1
 Content-Type: application/json
 
 {
-    "nombre": "Matías",
-    "apellido": "Sione",
-    "correo": "sionematias@gmail.com"
+    "nombre": "John",
+    "apellido": "Doe",
+    "correo": "johndoe@gmail.com"
 }
 
 ### Modificar un alumno (parcial)
@@ -29,8 +29,8 @@ PATCH http://localhost:3000/api/alumnos/bcff2a7b-b199-4f3b-9a92-fcbd1d250ee1
 Content-Type: application/json
 
 {
-    "nombre": "Francisco",
-    "apellido": "Juarez"
+    "nombre": "Mark",
+    "apellido": "Twain"
 }
 
 ### Borrar un alumno
