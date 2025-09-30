@@ -7,7 +7,6 @@ export class Alumno {
         public nombre: string,
         public apellido: string,
         public correo: string,
-        public id: crypto.UUID = crypto.randomUUID(),
         public _id?: ObjectId,
     ) {}
 }

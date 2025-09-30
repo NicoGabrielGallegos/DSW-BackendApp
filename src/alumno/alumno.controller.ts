@@ -42,8 +42,7 @@ async function add(req: Request, res: Response) {
 }
 
 async function update(req: Request, res: Response) {
-    req.body.sanitizedInput.id = req.params.id
-    const alumno = await repository.update(req.body.sanitizedInput)
+    const alumno = await repository.update({id: req.params.id}, req.body.sanitizedInput)
     if (!alumno) {
         res.status(404).send({message: "Alumno no encontrado"})
         return

@@ -2,7 +2,7 @@
 GET http://localhost:3000/api/alumnos
 
 ### Obtener un alumno
-GET http://localhost:3000/api/alumnos/bcff2a7b-b199-4f3b-9a92-fcbd1d250ee1
+GET http://localhost:3000/api/alumnos/68db4f77cb69faa5fccebea4
 
 ### Crear un alumno
 POST http://localhost:3000/api/alumnos
@@ -16,7 +16,7 @@ Content-Type: application/json
 }
 
 ### Modificar un alumno (total)
-PUT http://localhost:3000/api/alumnos/bcff2a7b-b199-4f3b-9a92-fcbd1d250ee1
+PUT http://localhost:3000/api/alumnos/68db6360d0c15dc14f9e628f
 Content-Type: application/json
 
 {
@@ -27,7 +27,7 @@ Content-Type: application/json
 }
 
 ### Modificar un alumno (parcial)
-PATCH http://localhost:3000/api/alumnos/bcff2a7b-b199-4f3b-9a92-fcbd1d250ee1
+PATCH http://localhost:3000/api/alumnos/68db6360d0c15dc14f9e628f
 Content-Type: application/json
 
 {
@@ -36,4 +36,4 @@ Content-Type: application/json
 }
 
 ### Borrar un alumno
-DELETE http://localhost:3000/api/alumnos/bcff2a7b-b199-4f3b-9a92-fcbd1d250ee1
+DELETE http://localhost:3000/api/alumnos/68db6360d0c15dc14f9e628f
