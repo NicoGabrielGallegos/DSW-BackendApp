@@ -9,6 +9,7 @@ POST http://localhost:3000/api/alumnos
 Content-Type: application/json
 
 {
+    "legajo": "1",
     "nombre": "Sam",
     "apellido": "Clemens",
     "correo": "samclemens@gmail.com"
@@ -19,6 +20,7 @@ PUT http://localhost:3000/api/alumnos/bcff2a7b-b199-4f3b-9a92-fcbd1d250ee1
 Content-Type: application/json
 
 {
+    "legajo": "2",
     "nombre": "John",
     "apellido": "Doe",
     "correo": "johndoe@gmail.com"

@@ -3,10 +3,11 @@ import crypto from "node:crypto"
 
 export class Alumno {
     constructor(
-        public legajo: crypto.UUID = crypto.randomUUID(),
+        public legajo: string,
         public nombre: string,
         public apellido: string,
         public correo: string,
+        public id: crypto.UUID = crypto.randomUUID(),
         public _id?: ObjectId,
     ) {}
 }

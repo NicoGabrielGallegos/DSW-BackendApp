@@ -4,8 +4,8 @@ import { add, findAll, findOne, remove, sanitizeAlumnoInput, update } from "./al
 export const alumnoRouter = Router()
 
 alumnoRouter.get("/", findAll)
-alumnoRouter.get("/:legajoAlumno", findOne)
+alumnoRouter.get("/:id", findOne)
 alumnoRouter.post("/", sanitizeAlumnoInput, add)
-alumnoRouter.put("/:legajoAlumno", sanitizeAlumnoInput, update)
-alumnoRouter.patch("/:legajoAlumno", sanitizeAlumnoInput, update)
-alumnoRouter.delete("/:legajoAlumno", remove)
+alumnoRouter.put("/:id", sanitizeAlumnoInput, update)
+alumnoRouter.patch("/:id", sanitizeAlumnoInput, update)
+alumnoRouter.delete("/:id", remove)

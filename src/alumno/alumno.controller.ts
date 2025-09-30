@@ -6,6 +6,7 @@ const repository = new AlumnoRepository()
 
 function sanitizeAlumnoInput(req: Request, _res: Response, next: NextFunction) {
     req.body.sanitizedInput = {
+        legajo: req.body.legajo,
         nombre: req.body.nombre,
         apellido: req.body.apellido,
         correo: req.body.correo
@@ -20,12 +21,12 @@ function sanitizeAlumnoInput(req: Request, _res: Response, next: NextFunction) {
     next()
 }
 
-function findAll(_req: Request, res: Response) {
-    res.json({data: repository.findAll()})
+async function findAll(_req: Request, res: Response) {
+    res.json({data: await repository.findAll()})
 }
 
-function findOne(req: Request, res: Response) {
-    const alumno = repository.findOne({id: req.params.legajoAlumno})
+async function findOne(req: Request, res: Response) {
+    const alumno = await repository.findOne({id: req.params.id})
     if (!alumno) {
         res.status(404).send({message: "Alumno no encontrado"})
         return
@@ -33,16 +34,16 @@ function findOne(req: Request, res: Response) {
     res.json({data: alumno})
 }
 
-function add(req: Request, res: Response) {
-    const {nombre, apellido, correo} = req.body.sanitizedInput
-    const alumnoInput = new Alumno(nombre, apellido, correo)
-    const alumno = repository.add(alumnoInput)
+async function add(req: Request, res: Response) {
+    const {legajo, nombre, apellido, correo} = req.body.sanitizedInput
+    const alumnoInput = new Alumno(legajo, nombre, apellido, correo)
+    const alumno = await repository.add(alumnoInput)
     res.status(201).send({message: "Alumno creado con éxito", data: alumno})
 }
 
-function update(req: Request, res: Response) {
-    req.body.sanitizedInput.legajoAlumno = req.params.legajoAlumno
-    const alumno = repository.update(req.body.sanitizedInput)
+async function update(req: Request, res: Response) {
+    req.body.sanitizedInput.id = req.params.id
+    const alumno = await repository.update(req.body.sanitizedInput)
     if (!alumno) {
         res.status(404).send({message: "Alumno no encontrado"})
         return
@@ -50,8 +51,8 @@ function update(req: Request, res: Response) {
     res.status(201).send({message: "Alumno modificado con éxito", data: alumno})
 }
 
-function remove(req: Request, res: Response) {
-    const alumno = repository.delete({id: req.params.legajoAlumno})
+async function remove(req: Request, res: Response) {
+    const alumno = await repository.delete({id: req.params.id})
     if (!alumno) {
         res.status(404).send({message: "Alumno no encontrado"})
         return
