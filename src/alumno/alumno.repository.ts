@@ -2,8 +2,8 @@ import { Repository } from "../shared/repository.js";
 import { Alumno } from "./alumno.entity.js";
 
 const alumnos: Alumno[] = [
-    new Alumno("Nicolás", "Gallegos", "ngabriel@gmail.com", "bcff2a7b-b199-4f3b-9a92-fcbd1d250ee1"),
-    new Alumno("Victoria", "Bay", "victoriabayutn@gmail.com", "ab93d5c7-dfa6-41f4-b3f9-72156df20ff8"),
+    new Alumno("bcff2a7b-b199-4f3b-9a92-fcbd1d250ee1", "Nicolás", "Gallegos", "ngabriel@gmail.com"),
+    new Alumno("ab93d5c7-dfa6-41f4-b3f9-72156df20ff8", "Victoria", "Bay", "victoriabayutn@gmail.com"),
 ]
 
 export class AlumnoRepository implements Repository<Alumno> {
@@ -13,7 +13,7 @@ export class AlumnoRepository implements Repository<Alumno> {
     }
 
     public findOne(item: {id: string}): Alumno | undefined {
-        return alumnos.find((alu) => alu.legajoAlumno === item.id)
+        return alumnos.find((alu) => alu.legajo === item.id)
     }
 
     public add(item: Alumno): Alumno | undefined {
@@ -22,7 +22,7 @@ export class AlumnoRepository implements Repository<Alumno> {
     }
 
     public update(item: Alumno): Alumno | undefined {
-        const aluIdx = alumnos.findIndex((alu => alu.legajoAlumno === item.legajoAlumno))
+        const aluIdx = alumnos.findIndex((alu => alu.legajo === item.legajo))
         
         if (aluIdx === -1) {
             return undefined
@@ -34,7 +34,7 @@ export class AlumnoRepository implements Repository<Alumno> {
     }
 
     public delete(item: {id: string}): Alumno | undefined {
-        const aluIdx = alumnos.findIndex((alu => alu.legajoAlumno === item.id))
+        const aluIdx = alumnos.findIndex((alu => alu.legajo === item.id))
 
         if (aluIdx === -1) {
             return undefined
