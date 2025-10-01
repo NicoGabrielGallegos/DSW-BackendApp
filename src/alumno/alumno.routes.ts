@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { add, findAll, findOne, remove, sanitizeAlumnoInput, update } from "./alumno.controller.js";
+import { add, findAll, findOne, update, remove, sanitizeAlumnoInput } from "./alumno.controller.js";
 
 export const alumnoRouter = Router()
 

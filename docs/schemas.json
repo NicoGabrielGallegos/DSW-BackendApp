@@ -1,0 +1,75 @@
+{
+    "alumnoSchema": {
+        "bsonType": "object",
+        "title": "Schema para validar Alumnos",
+        "required": [ "legajo", "nombre", "apellido", "correo"],
+        "properties": {
+            "legajo": { "bsonType": "string" },
+            "nombre": { "bsonType": "string" },
+            "apellido": { "bsonType": "string" },
+            "correo": { "bsonType": "string" }
+        }
+    },
+
+    "docenteSchema": {
+        "bsonType": "object",
+        "title": "Schema para validar Docentes",
+        "required": [ "legajo", "nombre", "apellido", "correo"],
+        "properties": {
+            "legajo": { "bsonType": "string" },
+            "nombre": { "bsonType": "string" },
+            "apellido": { "bsonType": "string" },
+            "correo": { "bsonType": "string" }
+        }
+    },
+
+    "materiaSchema": {
+        "bsonType": "object",
+        "title": "Schema para validar Materias",
+        "required": [ "descripcion" ],
+        "properties": {
+            "descripcion": { "bsonType": ""}
+        }
+    },
+
+    "dictadoSchema": {
+        "bsonType": "object",
+        "title": "Schema para validar Dictados",
+        "required": [ "docente", "materia" ],
+        "properties": {
+            "docente": { "bsonType": "objectId" },
+            "materia": { "bsonType": "objectId"}
+        }
+    },
+
+    "consultaSchema": {
+        "bsonType": "object",
+        "title": "Schema para validar Consultas",
+        "required": [ "dictado", "horaInicio", "horaFin", "estado" ],
+        "properties": {
+            "dictado": { "bsonType": "objectId"},
+            "horaInicio": { "bsonType": "date"},
+            "horaFin": { "bsonType": "date"},
+            "estado": { "bsonType": "string"}
+        }
+    },
+
+    "inscripcionSchema": {
+        "bsonType": "object",
+        "title": "Schema para validar Inscripciones",
+        "required": [ "alumno", "consulta" ],
+        "properties": {
+            "alumno": { "bsonType": "objectId" },
+            "consulta": { "bsonType": "objectId"}
+        }
+    },
+
+    "templateSchema": {
+        "bsonType": "object",
+        "title": "Schema para validar X",
+        "required": [],
+        "properties": {
+            "": { "bsonType": ""}
+        }
+    }
+}

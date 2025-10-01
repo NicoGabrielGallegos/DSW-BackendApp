@@ -1,5 +1,6 @@
 import express from "express"
 import { alumnoRouter } from "./alumno/alumno.routes.js"
+import { docenteRouter } from "./docente/docente.routes.js"
 
 // Crear aplicación Express
 const app = express()
@@ -7,8 +8,9 @@ const app = express()
 // Middleware para escuchar únicamente peticiones donde el header 'Content-Type' sea de tipo 'application/json'
 app.use(express.json())
 
-// Router hacia el recurso de alumnos
+// Router hacia los recursos
 app.use("/api/alumnos", alumnoRouter)
+app.use("/api/docentes", docenteRouter)
 
 // Middleware para el manejo de peticiones a recursos no válidos
 app.use((_req, res) => {

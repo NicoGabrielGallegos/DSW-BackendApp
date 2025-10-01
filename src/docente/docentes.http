@@ -1,0 +1,39 @@
+### Obtener todos los docentes
+GET http://localhost:3000/api/docentes
+
+### Obtener un docente
+GET http://localhost:3000/api/docentes/68dd6d86a986a458d727c3b3
+
+### Crear un docente
+POST http://localhost:3000/api/docentes
+Content-Type: application/json
+
+{
+    "legajo": "61555",
+    "nombre": "Adrián",
+    "apellido": "Meca",
+    "correo": "adrianmeca@gmail.com"
+}
+
+### Modificar un docente (total)
+PUT http://localhost:3000/api/docentes/68dd6d86a986a458d727c3b3
+Content-Type: application/json
+
+{
+    "legajo": "61444",
+    "nombre": "Joel",
+    "apellido": "Arnold",
+    "correo": "joelarnold@gmail.com"
+}
+
+### Modificar un docente (parcial)
+PATCH http://localhost:3000/api/docentes/68dd6d86a986a458d727c3b3
+Content-Type: application/json
+
+{
+    "nombre": "Diana",
+    "apellido": "Martinez"
+}
+
+### Borrar un docente
+DELETE http://localhost:3000/api/docentes/68dd6d86a986a458d727c3b3

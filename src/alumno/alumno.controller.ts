@@ -11,7 +11,6 @@ function sanitizeAlumnoInput(req: Request, _res: Response, next: NextFunction) {
         apellido: req.body.apellido,
         correo: req.body.correo
     }
-    // TODO checks
 
     Object.keys(req.body.sanitizedInput).forEach(key => {
         if(req.body.sanitizedInput[key] === undefined) {

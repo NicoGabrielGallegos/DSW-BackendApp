@@ -1,6 +1,6 @@
 import { ObjectId } from "mongodb";
 
-export class Alumno {
+export class Docente {
     constructor(
         public legajo: string,
         public nombre: string,
