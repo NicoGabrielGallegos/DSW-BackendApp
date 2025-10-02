@@ -28,7 +28,7 @@
         "title": "Schema para validar Materias",
         "required": [ "descripcion" ],
         "properties": {
-            "descripcion": { "bsonType": ""}
+            "descripcion": { "bsonType": "string"}
         }
     },
 
@@ -61,6 +61,16 @@
         "properties": {
             "alumno": { "bsonType": "objectId" },
             "consulta": { "bsonType": "objectId"}
+        }
+    },
+
+    "calificacion": {
+        "bsonTYpe": "object",
+        "title": "Schema para validar Calificaciones",
+        "required": [ "consulta", "valoracion" ],
+        "properties": {
+            "consulta": { "bsonType": "objectId" },
+            "valoracion": { "bsonType": "int" }
         }
     },
 
