@@ -1,0 +1,32 @@
+### Obtener todas los materias
+GET http://localhost:3000/api/materias
+
+### Obtener una materia
+GET http://localhost:3000/api/materias/68ded7ca8ec0a2eab3eb6481
+
+### Crear una materia
+POST http://localhost:3000/api/materias
+Content-Type: application/json
+
+{
+    "descripcion": "Análisis Matemático I"
+}
+
+### Modificar una materia (total)
+PUT http://localhost:3000/api/materias/68ded7ca8ec0a2eab3eb6481
+Content-Type: application/json
+
+{
+    "descripcion": "Física 1"
+}
+
+### Modificar una materia (parcial)
+PATCH http://localhost:3000/api/materias/68ded7ca8ec0a2eab3eb6481
+Content-Type: application/json
+
+{
+    "descripcion": "Fisica I"
+}
+
+### Borrar una materia
+DELETE http://localhost:3000/api/materias/68ded7ca8ec0a2eab3eb6481
