@@ -9,8 +9,8 @@ POST http://localhost:3000/api/dictados
 Content-Type: application/json
 
 {
-    "docente": "68dd6d91a986a458d727c3b4",
-    "materia": "68ded7bb8ec0a2eab3eb6480"
+    "docente": "68df28e78bb37be5374c241a",
+    "materia": "68df28b58bb37be5374c2419"
 }
 
 ### Modificar un dictado (total)

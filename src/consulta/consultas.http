@@ -1,0 +1,39 @@
+### Obtener todas las consultas
+GET http://localhost:3000/api/consultas
+
+### Obtener una consultas
+GET http://localhost:3000/api/consultas/68df56f211ed5b104bc2dd23
+
+### Crear una consultas
+POST http://localhost:3000/api/consultas
+Content-Type: application/json
+
+{
+    "dictado": "68df29b3123fac0290cebea5",
+    "horaInicio": "2025-10-03T13:15:00.000Z",
+    "horaFin": "2025-10-03T13:30:00.000Z",
+    "estado": "Pendiente"
+}
+
+### Modificar una consultas (total)
+PUT http://localhost:3000/api/consultas/68df56f211ed5b104bc2dd23
+Content-Type: application/json
+
+{
+    "legajo": "2",
+    "nombre": "John",
+    "apellido": "Doe",
+    "correo": "johndoe@gmail.com"
+}
+
+### Modificar una consultas (parcial)
+PATCH http://localhost:3000/api/consultas/68df56f211ed5b104bc2dd23
+Content-Type: application/json
+
+{
+    "horaInicio": "2025-10-02T13:15:00.000Z",
+    "horaFin": "2025-10-02T13:30:00.000Z",
+}
+
+### Borrar una consultas
+DELETE http://localhost:3000/api/consultas/68db6360d0c15dc14f9e628f

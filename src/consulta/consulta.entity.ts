@@ -1,5 +1,11 @@
 import { ObjectId } from "mongodb";
 
+export enum EstadoConsulta {
+    Programada = "Programada",
+    Realizada = "Realizada",
+    Cancelada = "Cancelada"
+}
+
 export class Consulta {
     constructor(
         public dictado: ObjectId,

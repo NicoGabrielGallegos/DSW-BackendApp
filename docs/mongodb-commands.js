@@ -1,5 +1,7 @@
 // use dswapp
 
+const { ObjectId } = require("mongodb")
+
 // insert data
 db.alumnos.insertOne({
     legajo: "51367",
