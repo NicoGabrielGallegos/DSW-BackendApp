@@ -107,6 +107,7 @@ async function findOne(req: Request, res: Response) {
 async function add(req: Request, res: Response) {
     const {dictado, horaInicio, horaFin, estado} = req.body.sanitizedInput
 
+    // Asegurar una duración mínima de 15 minutos
     if (horaInicio.getTime() + 900000 <= horaFin.getTime()) {
         const consultaInput = new Consulta(dictado, horaInicio, horaFin, estado)
         const consulta = await repository.add(consultaInput)
