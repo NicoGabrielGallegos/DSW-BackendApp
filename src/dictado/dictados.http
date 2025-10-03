@@ -1,0 +1,35 @@
+### Obtener todos los dictados
+GET http://localhost:3000/api/dictados
+
+### Obtener un dictado
+GET http://localhost:3000/api/dictados/68df1234e4f6b35c189f2b16
+
+### Crear un dictado
+POST http://localhost:3000/api/dictados
+Content-Type: application/json
+
+{
+    "docente": "68dd6d91a986a458d727c3b4",
+    "materia": "68ded7bb8ec0a2eab3eb6480"
+}
+
+### Modificar un dictado (total)
+PUT http://localhost:3000/api/dictados/68df1234e4f6b35c189f2b16
+Content-Type: application/json
+
+{
+    "docente": "68dd6d91a986a458d727c3b4",
+    "materia": "68ded7bb8ec0a2eab3eb6480"
+}
+
+### Modificar un dictado (parcial)
+PATCH http://localhost:3000/api/dictados/68df1234e4f6b35c189f2b16
+Content-Type: application/json
+
+{
+    "docente": "68dd6d91a986a458d727c3b4",
+    "materia": "68ded7bb8ec0a2eab3eb6480"
+}
+
+### Borrar un dictado
+DELETE http://localhost:3000/api/dictados/68df1255e4f6b35c189f2b17
