@@ -4,7 +4,14 @@ import { Materia } from "./materia.entity.js"
 
 const repository = new MateriaRepository()
 
-function sanitizeMateriaInput(req: Request, _res: Response, next: NextFunction) {
+function extractInput(req: Request, res: Response, next: NextFunction) {
+    req.body.input = {
+        descripcion: req.body.descripcion
+    }
+    next()
+}
+
+function sanitizeInput(req: Request, _res: Response, next: NextFunction) {
     req.body.sanitizedInput = {
         descripcion: req.body.descripcion
     }
@@ -55,4 +62,4 @@ async function remove(req: Request, res: Response) {
     res.status(200).send({message: "Materia borrada con éxito", data: materia})
 }
 
-export {sanitizeMateriaInput, findAll, findOne, add, update, remove}
+export {extractInput, sanitizeInput, findAll, findOne, add, update, remove}

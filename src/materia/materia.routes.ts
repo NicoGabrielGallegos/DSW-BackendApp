@@ -1,11 +1,12 @@
 import { Router } from "express";
-import { add, findAll, findOne, update, remove, sanitizeMateriaInput } from "./materia.controller.js";
+import { add, findAll, findOne, update, remove, extractInput, sanitizeInput } from "./materia.controller.js";
+import { assureCompleteInput } from "../shared/controller.middlewares.js";
 
 export const materiaRouter = Router()
 
 materiaRouter.get("/", findAll)
 materiaRouter.get("/:id", findOne)
-materiaRouter.post("/", sanitizeMateriaInput, add)
-materiaRouter.put("/:id", sanitizeMateriaInput, update)
-materiaRouter.patch("/:id", sanitizeMateriaInput, update)
+materiaRouter.post("/", extractInput, assureCompleteInput, sanitizeInput, add)
+materiaRouter.put("/:id", extractInput, sanitizeInput, update)
+materiaRouter.patch("/:id", extractInput, sanitizeInput, update)
 materiaRouter.delete("/:id", remove)
