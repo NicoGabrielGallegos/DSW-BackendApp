@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { add, findAll, findOne, update, remove, extractInput, assureCompleteInput, sanitizeInput } from "./alumno.controller.js";
+import { add, findAll, findOne, update, remove, extractInput, sanitizeInput } from "./alumno.controller.js";
+import { assureCompleteInput } from "../shared/controller.middlewares.js";
 
 export const alumnoRouter = Router()
 
