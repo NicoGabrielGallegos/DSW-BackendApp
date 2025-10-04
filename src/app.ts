@@ -4,6 +4,7 @@ import { docenteRouter } from "./docente/docente.routes.js"
 import { materiaRouter } from "./materia/materia.routes.js"
 import { dictadoRouter } from "./dictado/dictado.routes.js"
 import { consultaRouter } from "./consulta/consulta.routes.js"
+import { inscripcionRouter } from "./inscripcion/inscripcion.routes.js"
 
 // Crear aplicación Express
 const app = express()
@@ -17,6 +18,7 @@ app.use("/api/docentes", docenteRouter)
 app.use("/api/materias", materiaRouter)
 app.use("/api/dictados", dictadoRouter)
 app.use("/api/consultas", consultaRouter)
+app.use("/api/inscripciones", inscripcionRouter)
 
 // Middleware para el manejo de peticiones a recursos no válidos
 app.use((_req, res) => {

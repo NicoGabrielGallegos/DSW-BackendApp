@@ -1,0 +1,34 @@
+### Obtener todas las inscripciones
+GET http://localhost:3000/api/inscripciones
+
+### Obtener una inscripcion
+GET http://localhost:3000/api/inscripciones/68e13ab0011816e8c3a9d16c
+
+### Crear una inscripcion
+POST http://localhost:3000/api/inscripciones
+Content-Type: application/json
+
+{
+    "alumno": "68db4f77cb69faa5fccebea4",
+    "consulta": "68df56cd3d6afc727904b7bc"
+}
+
+### Modificar una inscripcion (total)
+PUT http://localhost:3000/api/inscripciones/68e13a91011816e8c3a9d16b
+Content-Type: application/json
+
+{
+    "alumno": "68db4f7bcb69faa5fccebea5",
+    "consulta": "68df56cd3d6afc727904b7bc"
+}
+
+### Modificar una inscripcion (parcial)
+PATCH http://localhost:3000/api/inscripciones/68e13ab0011816e8c3a9d16c
+Content-Type: application/json
+
+{
+    "consulta": "68df2cf4a0224ddbe08a5229"
+}
+
+### Borrar una inscripcion
+DELETE http://localhost:3000/api/inscripciones/68e13ab0011816e8c3a9d16c
