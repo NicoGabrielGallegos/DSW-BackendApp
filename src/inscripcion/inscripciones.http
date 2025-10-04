@@ -10,7 +10,7 @@ Content-Type: application/json
 
 {
     "alumno": "68db4f77cb69faa5fccebea4",
-    "consulta": "68df56cd3d6afc727904b7bc"
+    "consulta": "68df59856c91ee4e52869742"
 }
 
 ### Modificar una inscripcion (total)
