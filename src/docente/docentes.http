@@ -16,7 +16,7 @@ Content-Type: application/json
 }
 
 ### Modificar un docente (total)
-PUT http://localhost:3000/api/docentes/68dd6d86a986a458d727c3b3
+PUT http://localhost:3000/api/docentes/68e17f48ba0b677f358abbda
 Content-Type: application/json
 
 {
@@ -27,7 +27,7 @@ Content-Type: application/json
 }
 
 ### Modificar un docente (parcial)
-PATCH http://localhost:3000/api/docentes/68dd6d86a986a458d727c3b3
+PATCH http://localhost:3000/api/docentes/68e17f48ba0b677f358abbda
 Content-Type: application/json
 
 {
@@ -36,4 +36,4 @@ Content-Type: application/json
 }
 
 ### Borrar un docente
-DELETE http://localhost:3000/api/docentes/68dd6d86a986a458d727c3b3
+DELETE http://localhost:3000/api/docentes/68e17f48ba0b677f358abbda
