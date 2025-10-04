@@ -1,22 +1,63 @@
 import { Request, Response, NextFunction } from "express"
 import { AlumnoRepository } from "./alumno.repository.js"
 import { Alumno } from "./alumno.entity.js"
+import { isValidEmail } from "../shared/validations.js"
 
 const repository = new AlumnoRepository()
 
-function sanitizeAlumnoInput(req: Request, _res: Response, next: NextFunction) {
-    req.body.sanitizedInput = {
+function extractInput(req: Request, res: Response, next: NextFunction) {
+    req.body.input = {
         legajo: req.body.legajo,
         nombre: req.body.nombre,
         apellido: req.body.apellido,
         correo: req.body.correo
     }
+    next()
+}
 
+function assureCompleteInput(req: Request, res: Response, next: NextFunction) {
+    let error_message = "Entrada incompleta. Propiedades faltantes: "
+    let error = false
+
+    Object.keys(req.body.input).forEach(key => {
+        if (req.body.input[key] === undefined) {
+            error_message += key + ", "
+            error = true
+        }
+    })
+
+    if (error) {
+        res.status(400).send({ message: error_message.slice(0, -2)})
+        return
+    }
+
+    next()
+}
+
+function sanitizeInput(req: Request, res: Response, next: NextFunction) {
+    const { legajo, nombre, apellido, correo } = req.body.input
+    req.body.sanitizedInput = {
+        legajo: legajo,
+        nombre: nombre,
+        apellido: apellido,
+    }
+    
+    if (correo !== undefined) {
+        if (isValidEmail(correo)) {
+            req.body.sanitizedInput.correo = correo
+        } else {
+            res.status(400).send({ message: "El correo ingresado no es válido"})
+            return
+        }
+    }
+        
+    delete req.body.input
     Object.keys(req.body.sanitizedInput).forEach(key => {
         if(req.body.sanitizedInput[key] === undefined) {
             delete req.body.sanitizedInput[key]
         }
     })
+
     next()
 }
 
@@ -58,4 +99,4 @@ async function remove(req: Request, res: Response) {
     res.status(200).send({message: "Alumno borrado con éxito", data: alumno})
 }
 
-export {sanitizeAlumnoInput, findAll, findOne, add, update, remove}
+export {extractInput, assureCompleteInput, sanitizeInput, findAll, findOne, add, update, remove}

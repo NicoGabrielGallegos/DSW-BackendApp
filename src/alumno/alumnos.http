@@ -16,7 +16,7 @@ Content-Type: application/json
 }
 
 ### Modificar un alumno (total)
-PUT http://localhost:3000/api/alumnos/68db6360d0c15dc14f9e628f
+PUT http://localhost:3000/api/alumnos/68e1461e6b8e442bfe1df0f8
 Content-Type: application/json
 
 {
@@ -27,7 +27,7 @@ Content-Type: application/json
 }
 
 ### Modificar un alumno (parcial)
-PATCH http://localhost:3000/api/alumnos/68db6360d0c15dc14f9e628f
+PATCH http://localhost:3000/api/alumnos/68e1461e6b8e442bfe1df0f8
 Content-Type: application/json
 
 {
@@ -36,4 +36,4 @@ Content-Type: application/json
 }
 
 ### Borrar un alumno
-DELETE http://localhost:3000/api/alumnos/68db6360d0c15dc14f9e628f
+DELETE http://localhost:3000/api/alumnos/68e144f400f67f8a414cd946
