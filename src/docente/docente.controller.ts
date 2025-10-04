@@ -15,25 +15,6 @@ function extractInput(req: Request, res: Response, next: NextFunction) {
     next()
 }
 
-function assureCompleteInput(req: Request, res: Response, next: NextFunction) {
-    let error_message = "Entrada incompleta. Propiedades faltantes: "
-    let error = false
-
-    Object.keys(req.body.input).forEach(key => {
-        if (req.body.input[key] === undefined) {
-            error_message += key + ", "
-            error = true
-        }
-    })
-
-    if (error) {
-        res.status(400).send({ message: error_message.slice(0, -2)})
-        return
-    }
-
-    next()
-}
-
 function sanitizeInput(req: Request, res: Response, next: NextFunction) {
     const { legajo, nombre, apellido, correo } = req.body.input
     req.body.sanitizedInput = {
@@ -99,4 +80,4 @@ async function remove(req: Request, res: Response) {
     res.status(200).send({message: "Docente borrado con éxito", data: docente})
 }
 
-export {extractInput, assureCompleteInput, sanitizeInput, findAll, findOne, add, update, remove}
+export {extractInput, sanitizeInput, findAll, findOne, add, update, remove}

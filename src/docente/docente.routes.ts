@@ -1,5 +1,6 @@
 import { Router } from "express";
-import { add, findAll, findOne, update, remove, extractInput, assureCompleteInput, sanitizeInput } from "./docente.controller.js";
+import { add, findAll, findOne, update, remove, extractInput, sanitizeInput } from "./docente.controller.js";
+import { assureCompleteInput } from "../shared/controller.middlewares.js";
 
 export const docenteRouter = Router()
 
