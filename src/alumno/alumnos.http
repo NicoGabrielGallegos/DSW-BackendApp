@@ -12,7 +12,8 @@ Content-Type: application/json
     "legajo": "1",
     "nombre": "Sam",
     "apellido": "Clemens",
-    "correo": "samclemens@gmail.com"
+    "correo": "samclemens@gmail.com",
+    "password": "asd"
 }
 
 ### Modificar un alumno (total)
@@ -36,4 +37,4 @@ Content-Type: application/json
 }
 
 ### Borrar un alumno
-DELETE http://localhost:3000/api/alumnos/68e144f400f67f8a414cd946
+DELETE http://localhost:3000/api/alumnos/68e29811bffd40da5eae9be9
