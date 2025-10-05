@@ -2,12 +2,13 @@
     "alumnoSchema": {
         "bsonType": "object",
         "title": "Schema para validar Alumnos",
-        "required": [ "legajo", "nombre", "apellido", "correo"],
+        "required": [ "legajo", "nombre", "apellido", "correo", "password"],
         "properties": {
             "legajo": { "bsonType": "string" },
             "nombre": { "bsonType": "string" },
             "apellido": { "bsonType": "string" },
-            "correo": { "bsonType": "string" }
+            "correo": { "bsonType": "string" },
+            "password": { "bsonType": "string"}
         }
     },
 
@@ -19,7 +20,8 @@
             "legajo": { "bsonType": "string" },
             "nombre": { "bsonType": "string" },
             "apellido": { "bsonType": "string" },
-            "correo": { "bsonType": "string" }
+            "correo": { "bsonType": "string" },
+            "password": { "bsonType": "string"}
         }
     },
 
