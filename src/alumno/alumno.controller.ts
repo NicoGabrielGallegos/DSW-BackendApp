@@ -145,7 +145,7 @@ async function findAllByConsulta(req: Request, res: Response) {
         res.status(400).send({ message: "El id de consulta ingresado no es válido" })
         return
     }
-    res.json({ data: await alumnoRepository.findAllByConsulta({ consulta: new ObjectId(req.params.consulta) }) })
+    res.json({ data: await alumnoRepository.findAllByConsulta({ consulta: new ObjectId(consulta) }) })
 }
 
 export { extractInput, sanitizeInput, findAll, findOne, add, update, remove, findOneByCorreo, findAllByConsulta }
