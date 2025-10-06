@@ -1,8 +1,11 @@
 import { Request, Response, NextFunction } from "express"
 import { MateriaRepository } from "./materia.repository.js"
 import { Materia } from "./materia.entity.js"
+import { ObjectId } from "mongodb"
+import { DictadoRepository } from "../dictado/dictado.repository.js"
 
-const repository = new MateriaRepository()
+const materiaRepository = new MateriaRepository()
+const dictadoRepository = new DictadoRepository()
 
 function extractInput(req: Request, res: Response, next: NextFunction) {
     req.body.input = {
@@ -12,54 +15,110 @@ function extractInput(req: Request, res: Response, next: NextFunction) {
 }
 
 function sanitizeInput(req: Request, _res: Response, next: NextFunction) {
+    const { descripcion } = req.body.input
     req.body.sanitizedInput = {
-        descripcion: req.body.descripcion
+        descripcion: descripcion
     }
 
+    delete req.body.input
     Object.keys(req.body.sanitizedInput).forEach(key => {
-        if(req.body.sanitizedInput[key] === undefined) {
+        if (req.body.sanitizedInput[key] === undefined) {
             delete req.body.sanitizedInput[key]
         }
     })
+
     next()
 }
 
+function handleError(res: Response, err: any) {
+    switch (err.code) {
+        case 11000: // DuplicateKey
+            const key = Object.keys(err.errorResponse.keyValue)[0]
+            const value = Object.values(err.errorResponse.keyValue)[0]
+            res.status(400).send({ message: `La operación no se pudo completar, '${key}: ${value}' ya existe` })
+            return
+        case 121: // DocumentValidationFailure
+            let error_message = "Ocurrió un problema al intentar validar las siguiente propiedades: "
+            err.errorResponse.errInfo.details.schemaRulesNotSatisfied[0].propertiesNotSatisfied.forEach((property: { propertyName: string }) => {
+                error_message += `${property.propertyName}, `
+            });
+            res.status(400).send({ message: error_message.slice(0, -2) })
+            break
+        default:
+            res.status(400).send({ message: err })
+            return
+    }
+}
+
+// ----- Operaciones CRUD comunes -----
+
 async function findAll(_req: Request, res: Response) {
-    res.json({data: await repository.findAll()})
+    res.json({ data: await materiaRepository.findAll() })
 }
 
 async function findOne(req: Request, res: Response) {
-    const materia = await repository.findOne({id: req.params.id})
+    const materia = await materiaRepository.findOne({ id: req.params.id })
     if (!materia) {
-        res.status(404).send({message: "Materia no encontrada"})
+        res.status(404).send({ message: "Materia no encontrada" })
         return
     }
-    res.json({data: materia})
+    res.json({ data: materia })
 }
 
 async function add(req: Request, res: Response) {
-    const {descripcion} = req.body.sanitizedInput
+    const { descripcion } = req.body.sanitizedInput
     const materiaInput = new Materia(descripcion)
-    const materia = await repository.add(materiaInput)
-    res.status(201).send({message: "Materia creada con éxito", data: materia})
+    try {
+        const materia = await materiaRepository.add(materiaInput)
+        res.status(201).send({ message: "Materia creada con éxito", data: materia })
+    } catch (err: any) {
+        handleError(res, err)
+    }
 }
 
 async function update(req: Request, res: Response) {
-    const materia = await repository.update({id: req.params.id}, req.body.sanitizedInput)
-    if (!materia) {
-        res.status(404).send({message: "Materia no encontrada"})
-        return
+    try {
+        const materia = await materiaRepository.update({ id: req.params.id }, req.body.sanitizedInput)
+        if (!materia) {
+            res.status(404).send({ message: "Materia no encontrada" })
+            return
+        }
+        res.status(201).send({ message: "Materia modificada con éxito", data: materia })
+    } catch (err) {
+        handleError(res, err)
     }
-    res.status(201).send({message: "Materia modificada con éxito", data: materia})
 }
 
 async function remove(req: Request, res: Response) {
-    const materia = await repository.delete({id: req.params.id})
-    if (!materia) {
-        res.status(404).send({message: "Materia no encontrada"})
+    const materia = await materiaRepository.delete({ id: req.params.id })
+    if (!materia || !materia._id) {
+        res.status(404).send({ message: "Materia no encontrada" })
         return
     }
-    res.status(200).send({message: "Materia borrada con éxito", data: materia})
+
+    await dictadoRepository.deleteByMateria({ materia: materia._id })
+
+    res.status(200).send({ message: "Materia borrada con éxito", data: materia })
 }
 
-export {extractInput, sanitizeInput, findAll, findOne, add, update, remove}
+// ----- Operaciones específicas -----
+
+async function findOneByDescripcion(req: Request, res: Response) {
+    const materia = await materiaRepository.findOneByFilter({ descripcion: req.params.descripcion })
+    if (!materia) {
+        res.status(404).send({ message: "Materia no encontrado" })
+        return
+    }
+    res.json({ data: materia })
+}
+
+async function findAllByDocente(req: Request, res: Response) {
+    let docente = req.params.docente
+    if (!ObjectId.isValid(docente)) {
+        res.status(400).send({ message: "El id de docente ingresado no es válido" })
+        return
+    }
+    res.json({ data: await materiaRepository.findAllByDocente({ docente: new ObjectId(docente) }) })
+}
+
+export { extractInput, sanitizeInput, findAll, findOne, add, update, remove, findOneByDescripcion, findAllByDocente }

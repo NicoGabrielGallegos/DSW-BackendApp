@@ -38,4 +38,8 @@ export class DictadoRepository implements Repository<Dictado> {
     public async deleteByDocente(filter: {docente: ObjectId}): Promise<void> {
         // TODO
     }
+
+    public async deleteByMateria(filter: {materia: ObjectId}): Promise<void> {
+        // TODO
+    }
 }
