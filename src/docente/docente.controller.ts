@@ -127,7 +127,7 @@ async function remove(req: Request, res: Response) {
 async function findOneByCorreo(req: Request, res: Response) {
     const docente = await docenteRepository.findOneByFilter({ correo: req.params.correo })
     if (!docente) {
-        res.status(404).send({ message: "Alumno no encontrado" })
+        res.status(404).send({ message: "Docente no encontrado" })
         return
     }
     res.json({ data: docente })
@@ -136,7 +136,7 @@ async function findOneByCorreo(req: Request, res: Response) {
 async function findAllByMateria(req: Request, res: Response) {
     let materia = req.params.materia
     if (!ObjectId.isValid(materia)) {
-        res.status(400).send({ message: "El id de consulta ingresado no es válido" })
+        res.status(400).send({ message: "El id de materia ingresado no es válido" })
         return
     }
     res.json({ data: await docenteRepository.findAllByMateria({ materia: new ObjectId(materia) }) })
