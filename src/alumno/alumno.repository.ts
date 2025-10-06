@@ -46,7 +46,7 @@ export class AlumnoRepository implements Repository<Alumno> {
     }
 
     public async findAllByConsulta(filter: { consulta: ObjectId }): Promise<Alumno[]> {
-        const alumnos: Alumno[] = []
+        const alumnosByConsulta: Alumno[] = []
         const consulta = filter.consulta
         ;(await inscripciones.aggregate([
             {
@@ -65,9 +65,9 @@ export class AlumnoRepository implements Repository<Alumno> {
             }
 
         ]).toArray()).forEach((inscripcion) => {
-            alumnos.push(inscripcion.alumno[0])
+            alumnosByConsulta.push(inscripcion.alumno[0])
         });
 
-        return alumnos
+        return alumnosByConsulta
     }
 }
