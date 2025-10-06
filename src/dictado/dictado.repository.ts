@@ -34,4 +34,8 @@ export class DictadoRepository implements Repository<Dictado> {
         const _id = new ObjectId(filter.id)
         return await dictados.findOneAndDelete({_id}) || undefined
     }
+
+    public async deleteByDocente(filter: {docente: ObjectId}): Promise<void> {
+        // TODO
+    }
 }
