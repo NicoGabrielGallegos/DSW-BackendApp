@@ -4,7 +4,7 @@ import { assureCompleteInput } from "../shared/controller.middlewares.js";
 
 export const alumnoRouter = Router()
 
-// Routas comunes
+// Rutas comunes
 alumnoRouter.get("/", findAll)
 alumnoRouter.get("/:id", findOne)
 alumnoRouter.post("/", extractInput, assureCompleteInput, sanitizeInput, add)
