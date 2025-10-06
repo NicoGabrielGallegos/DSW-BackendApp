@@ -9,7 +9,7 @@ import { InscripcionRepository } from "../inscripcion/inscripcion.repository.js"
 const alumnoRepository = new AlumnoRepository()
 const inscripcionRepository = new InscripcionRepository()
 
-function extractInput(req: Request, res: Response, next: NextFunction) {
+function extractInput(req: Request, _res: Response, next: NextFunction) {
     req.body.input = {
         legajo: req.body.legajo,
         nombre: req.body.nombre,
