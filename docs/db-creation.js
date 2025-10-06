@@ -19,6 +19,9 @@ db.createCollection("alumnos", {
     }
 })
 
+db.alumnos.createIndex({ legajo: 1 }, { unique: true})
+db.alumnos.createIndex({ correo: 1 }, { unique: true})
+
 db.createCollection("docentes", {
     validator: {
         $jsonSchema: {

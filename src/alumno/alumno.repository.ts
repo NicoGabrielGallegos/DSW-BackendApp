@@ -34,4 +34,8 @@ export class AlumnoRepository implements Repository<Alumno> {
         const _id = new ObjectId(filter.id)
         return await alumnos.findOneAndDelete({_id}) || undefined
     }
+
+    public async findOneByFilter(filter: {legajo?: string, nombre?: string, apellido?: string, correo?: string}): Promise<Alumno | undefined> {
+        return await alumnos.findOne(filter) || undefined
+    }
 }

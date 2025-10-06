@@ -3,6 +3,7 @@ import { AlumnoRepository } from "./alumno.repository.js"
 import { Alumno } from "./alumno.entity.js"
 import { isValidEmail } from "../shared/validations.js"
 import { hash } from "bcryptjs"
+import { MongoError } from "mongodb"
 
 const repository = new AlumnoRepository()
 
@@ -48,6 +49,27 @@ async function sanitizeInput(req: Request, res: Response, next: NextFunction) {
     next()
 }
 
+function handleMongoError(res: Response, err: any) {
+    switch (err.code) {
+        case 11000: // DuplicateKey
+            const key = Object.keys(err.errorResponse.keyValue)[0]
+            const value = Object.values(err.errorResponse.keyValue)[0]
+            res.status(400).send({ message: `Valor '${value}' duplicado en la propiedad ${key}`})
+            return
+        //case 121: // DocumentValidationFailure
+        //    let error_message = "Ocurrió un problema al intentar validar las siguiente propiedades: "
+        //    
+        //    err.errorResponse.errInfo.details.schemaRulesNotSatisfied[0].propertiesNotSatisfied.forEach((property: { propertyName: string }) => {
+        //        error_message += `${property.propertyName}, `
+        //    });
+        //    res.status(400).send({ message: error_message.slice(0, -2)})
+        //    break
+        default:
+            res.status(400).send({ message: err })
+            return
+    }
+}
+
 async function findAll(_req: Request, res: Response) {
     res.json({ data: await repository.findAll() })
 }
@@ -67,18 +89,23 @@ async function add(req: Request, res: Response) {
     try {
         const alumno = await repository.add(alumnoInput)
         res.status(201).send({ message: "Alumno creado con éxito", data: alumno })
-    } catch (err) {
-        res.status(400).send({ message: err})
+    } catch (err: any) {
+        handleMongoError(res, err)
     }
 }
 
 async function update(req: Request, res: Response) {
-    const alumno = await repository.update({ id: req.params.id }, req.body.sanitizedInput)
-    if (!alumno) {
-        res.status(404).send({ message: "Alumno no encontrado" })
-        return
+    try {
+        const alumno = await repository.update({ id: req.params.id }, req.body.sanitizedInput)
+        if (!alumno) {
+            res.status(404).send({ message: "Alumno no encontrado" })
+            return
+        }
+        res.status(201).send({ message: "Alumno modificado con éxito", data: alumno })
+
+    } catch (err) {
+        handleMongoError(res, err)
     }
-    res.status(201).send({ message: "Alumno modificado con éxito", data: alumno })
 }
 
 async function remove(req: Request, res: Response) {
@@ -93,4 +120,13 @@ async function remove(req: Request, res: Response) {
     // Al eliminar un alumno, eliminar también sus inscripciones
 }
 
-export { extractInput, sanitizeInput, findAll, findOne, add, update, remove }
+async function findOneByCorreo(req: Request, res: Response) {
+    const alumno = await repository.findOneByFilter({ correo: req.params.correo })
+    if (!alumno) {
+        res.status(404).send({ message: "Alumno no encontrado" })
+        return
+    }
+    res.json({ data: alumno })
+}
+
+export { extractInput, sanitizeInput, findAll, findOne, add, update, remove, findOneByCorreo }
