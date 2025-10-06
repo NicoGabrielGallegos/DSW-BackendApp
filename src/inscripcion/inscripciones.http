@@ -9,7 +9,7 @@ POST http://localhost:3000/api/inscripciones
 Content-Type: application/json
 
 {
-    "alumno": "68db4f77cb69faa5fccebea4",
+    "alumno": "68db4f7bcb69faa5fccebea5",
     "consulta": "68df59856c91ee4e52869742"
 }
 
@@ -31,4 +31,4 @@ Content-Type: application/json
 }
 
 ### Borrar una inscripcion
-DELETE http://localhost:3000/api/inscripciones/68e13ab0011816e8c3a9d16c
+DELETE http://localhost:3000/api/inscripciones/68e3cd414f5e7f407b3119f4

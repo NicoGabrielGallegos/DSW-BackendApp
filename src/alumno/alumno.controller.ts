@@ -3,9 +3,11 @@ import { AlumnoRepository } from "./alumno.repository.js"
 import { Alumno } from "./alumno.entity.js"
 import { isValidEmail } from "../shared/validations.js"
 import { hash } from "bcryptjs"
-import { MongoError } from "mongodb"
+import { ObjectId } from "mongodb"
+import { InscripcionRepository } from "../inscripcion/inscripcion.repository.js"
 
-const repository = new AlumnoRepository()
+const alumnoRepository = new AlumnoRepository()
+const inscripcionRepository = new InscripcionRepository()
 
 function extractInput(req: Request, res: Response, next: NextFunction) {
     req.body.input = {
@@ -49,33 +51,39 @@ async function sanitizeInput(req: Request, res: Response, next: NextFunction) {
     next()
 }
 
-function handleMongoError(res: Response, err: any) {
+function handleError(res: Response, err: any) {
     switch (err.code) {
         case 11000: // DuplicateKey
             const key = Object.keys(err.errorResponse.keyValue)[0]
             const value = Object.values(err.errorResponse.keyValue)[0]
-            res.status(400).send({ message: `Valor '${value}' duplicado en la propiedad ${key}`})
+            res.status(400).send({ message: `La operación no se pudo completar, '${key}: ${value}' ya existe` })
             return
-        //case 121: // DocumentValidationFailure
-        //    let error_message = "Ocurrió un problema al intentar validar las siguiente propiedades: "
-        //    
-        //    err.errorResponse.errInfo.details.schemaRulesNotSatisfied[0].propertiesNotSatisfied.forEach((property: { propertyName: string }) => {
-        //        error_message += `${property.propertyName}, `
-        //    });
-        //    res.status(400).send({ message: error_message.slice(0, -2)})
-        //    break
+        case 121: // DocumentValidationFailure
+            let error_message = "Ocurrió un problema al intentar validar las siguiente propiedades: "
+            
+            // Si se agregan más validaciones al esquema, esta validación sería necesaria
+            // let detalles = err.errorResponse.errInfo.details
+            // if (detalles.operatorName === "$jsonSchema" && detalles.schemaRulesNotSatisfied[0] === "operatorName")
+
+            err.errorResponse.errInfo.details.schemaRulesNotSatisfied[0].propertiesNotSatisfied.forEach((property: { propertyName: string }) => {
+                error_message += `${property.propertyName}, `
+            });
+            res.status(400).send({ message: error_message.slice(0, -2)})
+            break
         default:
             res.status(400).send({ message: err })
             return
     }
 }
 
+// ----- Operaciones CRUD comunes -----
+
 async function findAll(_req: Request, res: Response) {
-    res.json({ data: await repository.findAll() })
+    res.json({ data: await alumnoRepository.findAll() })
 }
 
 async function findOne(req: Request, res: Response) {
-    const alumno = await repository.findOne({ id: req.params.id })
+    const alumno = await alumnoRepository.findOne({ id: req.params.id })
     if (!alumno) {
         res.status(404).send({ message: "Alumno no encontrado" })
         return
@@ -87,16 +95,16 @@ async function add(req: Request, res: Response) {
     const { legajo, nombre, apellido, correo, password } = req.body.sanitizedInput
     const alumnoInput = new Alumno(legajo, nombre, apellido, correo, password)
     try {
-        const alumno = await repository.add(alumnoInput)
+        const alumno = await alumnoRepository.add(alumnoInput)
         res.status(201).send({ message: "Alumno creado con éxito", data: alumno })
     } catch (err: any) {
-        handleMongoError(res, err)
+        handleError(res, err)
     }
 }
 
 async function update(req: Request, res: Response) {
     try {
-        const alumno = await repository.update({ id: req.params.id }, req.body.sanitizedInput)
+        const alumno = await alumnoRepository.update({ id: req.params.id }, req.body.sanitizedInput)
         if (!alumno) {
             res.status(404).send({ message: "Alumno no encontrado" })
             return
@@ -104,24 +112,26 @@ async function update(req: Request, res: Response) {
         res.status(201).send({ message: "Alumno modificado con éxito", data: alumno })
 
     } catch (err) {
-        handleMongoError(res, err)
+        handleError(res, err)
     }
 }
 
 async function remove(req: Request, res: Response) {
-    const alumno = await repository.delete({ id: req.params.id })
-    if (!alumno) {
+    const alumno = await alumnoRepository.delete({ id: req.params.id })
+    if (!alumno || !alumno._id) {
         res.status(404).send({ message: "Alumno no encontrado" })
         return
     }
-    res.status(200).send({ message: "Alumno borrado con éxito", data: alumno })
 
-    // TODO:
-    // Al eliminar un alumno, eliminar también sus inscripciones
+    await inscripcionRepository.deleteByAlumno({ alumno: alumno._id })
+
+    res.status(200).send({ message: "Alumno borrado con éxito", data: alumno })
 }
 
+// ----- Operaciones específicas -----
+
 async function findOneByCorreo(req: Request, res: Response) {
-    const alumno = await repository.findOneByFilter({ correo: req.params.correo })
+    const alumno = await alumnoRepository.findOneByFilter({ correo: req.params.correo })
     if (!alumno) {
         res.status(404).send({ message: "Alumno no encontrado" })
         return
@@ -129,4 +139,13 @@ async function findOneByCorreo(req: Request, res: Response) {
     res.json({ data: alumno })
 }
 
-export { extractInput, sanitizeInput, findAll, findOne, add, update, remove, findOneByCorreo }
+async function findAllByConsulta(req: Request, res: Response) {
+    let consulta = req.params.consulta
+    if (!ObjectId.isValid(consulta)) {
+        res.status(400).send({ message: "El id de consulta ingresado no es válido" })
+        return
+    }
+    res.json({ data: await alumnoRepository.findAllByConsulta({ consulta: new ObjectId(req.params.consulta) }) })
+}
+
+export { extractInput, sanitizeInput, findAll, findOne, add, update, remove, findOneByCorreo, findAllByConsulta }
