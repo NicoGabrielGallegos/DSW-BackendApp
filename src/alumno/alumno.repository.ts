@@ -46,11 +46,10 @@ export class AlumnoRepository implements Repository<Alumno> {
     }
 
     public async findAllByConsulta(filter: { consulta: ObjectId }): Promise<Alumno[]> {
-        const alumnosByConsulta: Alumno[] = []
-        const consulta = filter.consulta
-        ;(await inscripciones.aggregate([
+        const alumnosByConsulta: Alumno[] = [];
+        (await inscripciones.aggregate([
             {
-                $match: { consulta }
+                $match: filter
             },
             {
                 $lookup: {
