@@ -46,4 +46,8 @@ export class InscripcionRepository implements Repository<Inscripcion> {
     public async deleteByAlumno(filter: { alumno: ObjectId }): Promise<void> {
         await inscripciones.deleteMany(filter)
     }
+
+    public async deleteByConsulta(filter: { consulta: ObjectId }): Promise<void> {
+        await inscripciones.deleteMany(filter)
+    }
 }

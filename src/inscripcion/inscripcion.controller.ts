@@ -64,6 +64,7 @@ async function sanitizeInput(req: Request, res: Response, next: NextFunction) {
     // TODO:
     // Que un alumno no pueda inscribirse a dos consultas con horarios superpuestos
 
+    // Eliminar keys sin valores asignados
     Object.keys(req.body.sanitizedInput).forEach(key => {
         if (req.body.sanitizedInput[key] === undefined) {
             delete req.body.sanitizedInput[key]
@@ -71,6 +72,33 @@ async function sanitizeInput(req: Request, res: Response, next: NextFunction) {
     })
     next()
 }
+
+function handleError(res: Response, err: any) {
+    switch (err.code) {
+        case 11000: // DuplicateKey
+            const key = Object.keys(err.errorResponse.keyValue)[0]
+            const value = Object.values(err.errorResponse.keyValue)[0]
+            res.status(400).send({ message: `La operación no se pudo completar, '${key}: ${value}' ya existe` })
+            return
+        case 121: // DocumentValidationFailure
+            let error_message = "Ocurrió un problema al intentar validar las siguiente propiedades: "
+
+            // Si se agregan más validaciones al esquema, esta validación sería necesaria
+            // let detalles = err.errorResponse.errInfo.details
+            // if (detalles.operatorName === "$jsonSchema" && detalles.schemaRulesNotSatisfied[0] === "operatorName")
+
+            err.errorResponse.errInfo.details.schemaRulesNotSatisfied[0].propertiesNotSatisfied.forEach((property: { propertyName: string }) => {
+                error_message += `${property.propertyName}, `
+            });
+            res.status(400).send({ message: error_message.slice(0, -2) })
+            break
+        default:
+            res.status(400).send({ message: err })
+            return
+    }
+}
+
+// ----- Operaciones CRUD comunes -----
 
 async function findAll(_req: Request, res: Response) {
     res.json({ data: await inscripcionRepository.findAll() })
@@ -88,17 +116,25 @@ async function findOne(req: Request, res: Response) {
 async function add(req: Request, res: Response) {
     const { alumno, consulta } = req.body.sanitizedInput
     const inscripcionInput = new Inscripcion(alumno, consulta)
-    const inscripcion = await inscripcionRepository.add(inscripcionInput)
-    res.status(201).send({ message: "Inscripcion creado con éxito", data: inscripcion })
+    try {
+        const inscripcion = await inscripcionRepository.add(inscripcionInput)
+        res.status(201).send({ message: "Inscripcion creado con éxito", data: inscripcion })
+    } catch (err: any) {
+        handleError(res, err)
+    }
 }
 
 async function update(req: Request, res: Response) {
-    const inscripcion = await inscripcionRepository.update({ id: req.params.id }, req.body.sanitizedInput)
-    if (!inscripcion) {
-        res.status(404).send({ message: "Inscripcion no encontrado" })
-        return
+    try {
+        const inscripcion = await inscripcionRepository.update({ id: req.params.id }, req.body.sanitizedInput)
+        if (!inscripcion) {
+            res.status(404).send({ message: "Inscripcion no encontrado" })
+            return
+        }
+        res.status(201).send({ message: "Inscripcion modificado con éxito", data: inscripcion })
+    } catch (err: any) {
+        handleError(res, err)
     }
-    res.status(201).send({ message: "Inscripcion modificado con éxito", data: inscripcion })
 }
 
 async function remove(req: Request, res: Response) {
@@ -110,4 +146,24 @@ async function remove(req: Request, res: Response) {
     res.status(200).send({ message: "Inscripcion borrado con éxito", data: inscripcion })
 }
 
-export { extractInput, sanitizeInput, findAll, findOne, add, update, remove }
+// ----- Operaciones específicas -----
+
+async function findAllByAlumno(req: Request, res: Response) {
+    let alumno = req.params.alumno
+    if (!ObjectId.isValid(alumno)) {
+        res.status(400).send({ message: "El id de alumno ingresado no es válido" })
+        return
+    }
+    res.json({ data: await inscripcionRepository.findAllByFilter({ alumno: new ObjectId(alumno) }) })
+}
+
+async function findAllByConsulta(req: Request, res: Response) {
+    let consulta = req.params.consulta
+    if (!ObjectId.isValid(consulta)) {
+        res.status(400).send({ message: "El id de consulta ingresado no es válido" })
+        return
+    }
+    res.json({ data: await inscripcionRepository.findAllByFilter({ consulta: new ObjectId(consulta) }) })
+}
+
+export { extractInput, sanitizeInput, findAll, findOne, add, update, remove, findAllByAlumno, findAllByConsulta }
