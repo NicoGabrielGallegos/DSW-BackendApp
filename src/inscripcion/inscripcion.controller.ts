@@ -56,6 +56,12 @@ async function sanitizeInput(req: Request, res: Response, next: NextFunction) {
         // Si se está creando la inscripción, pero la consulta ya finalizó o fue cancelada
         if (req.method == "POST" && consultaRecuperada.estado !== EstadoConsulta.Programada) {
             res.status(400).send({ message: "La consulta ingresada ya finalizó o fue cancelada" })
+            return
+        }
+        // Si el alumno ya tiene inscripciones en ese rango horario
+        if ((await inscripcionRepository.findAllByAlumnoInHorario({ alumno: req.body.sanitizedInput.alumno, horaInicio: consultaRecuperada.horaInicio, horaFin: consultaRecuperada.horaFin })).length !== 0) {
+            res.status(400).send({ message: "El horario de la consulta a la que intenta inscribirse se superpone con el de otra consulta a la que está inscripto"})
+            return
         }
         // Sino, la consulta es válida
         req.body.sanitizedInput.consulta = ObjectId.createFromHexString(consulta)

@@ -43,6 +43,34 @@ export class InscripcionRepository implements Repository<Inscripcion> {
         return await inscripciones.find(filter).toArray() || undefined
     }
 
+    public async findAllByAlumnoInHorario(filter: { alumno: ObjectId, horaInicio: Date, horaFin: Date }): Promise<Inscripcion[]> {
+        const inscripcionesByAlumnoInHorario: Inscripcion[] = [];
+        (await inscripciones.aggregate([
+            {
+                $match: { alumno: filter.alumno }
+            },
+            {
+                $lookup: {
+                    from: "consultas",
+                    localField: "consulta",
+                    foreignField: "_id",
+                    as: "consulta"
+                }
+            },
+            {
+                $match: { consulta: { horaInicio: { $lt: filter.horaFin }, horaFin: { $gt: filter.horaInicio} } }
+            },
+            {
+                $project: { "alumno": 1, "consulta": 1 }
+            }
+
+        ]).toArray()).forEach((inscripcion) => {
+            inscripcionesByAlumnoInHorario.push({alumno: inscripcion.alumno, consulta: inscripcion.consulta[0]._id, _id: inscripcion._id})
+        });
+
+        return inscripcionesByAlumnoInHorario
+    }
+
     public async deleteByAlumno(filter: { alumno: ObjectId }): Promise<void> {
         await inscripciones.deleteMany(filter)
     }
