@@ -59,15 +59,14 @@ export class InscripcionRepository implements Repository<Inscripcion> {
             },
             {
                 $match: {
-                    consulta: { $elemMatch: { horaInicio: { $lt: filter.horaFin }, horaFin: { $gt: filter.horaInicio} } }
+                    consulta: { $elemMatch: { horaInicio: { $lt: filter.horaFin }, horaFin: { $gt: filter.horaInicio } } }
                 }
             },
             {
                 $project: { "alumno": 1, "consulta": 1 }
             }
-
         ]).toArray()).forEach((inscripcion) => {
-            inscripcionesByAlumnoInHorario.push({alumno: inscripcion.alumno, consulta: inscripcion.consulta[0]._id, _id: inscripcion._id})
+            inscripcionesByAlumnoInHorario.push({ alumno: inscripcion.alumno, consulta: inscripcion.consulta[0]._id, _id: inscripcion._id })
         });
 
         return inscripcionesByAlumnoInHorario

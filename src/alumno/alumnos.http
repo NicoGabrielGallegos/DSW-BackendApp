@@ -9,10 +9,10 @@ POST http://localhost:3000/api/alumnos
 Content-Type: application/json
 
 {
-    "legajo": "7",
-    "nombre": "Sam",
-    "apellido": "Clemens",
-    "correo": "samlemens@gmail.com",
+    "legajo": "51367",
+    "nombre": "Nicolás",
+    "apellido": "Gallegos",
+    "correo": "ngabrielgallegos@gmail.com",
     "password": "asd123"
 }
 
@@ -36,7 +36,7 @@ Content-Type: application/json
 }
 
 ### Borrar un alumno
-DELETE http://localhost:3000/api/alumnos/68e3c237fe1fd606fd1e4736
+DELETE http://localhost:3000/api/alumnos/68e804c2981579261dc6852c
 
 ### ----- Peticiones especiales -----
 

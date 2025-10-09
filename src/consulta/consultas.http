@@ -2,16 +2,16 @@
 GET http://localhost:3000/api/consultas
 
 ### Obtener una consultas
-GET http://localhost:3000/api/consultas/68df56f211ed5b104bc2dd23
+GET http://localhost:3000/api/consultas/68e80a4f981579261dc68541
 
 ### Crear una consultas
 POST http://localhost:3000/api/consultas
 Content-Type: application/json
 
 {
-    "dictado": "68e7cd4ff8e4a752f55713eb",
-    "horaInicio": "2025-10-10T13:00:00.000Z",
-    "horaFin": "2025-10-10T13:15:00.000Z",
+    "dictado": "68e8087a981579261dc6853c",
+    "horaInicio": "2025-11-01T15:00:00.000Z",
+    "horaFin": "2025-11-01T15:20:00.000Z",
     "estado": "Programada"
 }
 
@@ -37,3 +37,18 @@ Content-Type: application/json
 
 ### Borrar una consultas
 DELETE http://localhost:3000/api/consultas/68e7cf8cf8e4a752f55713f0
+
+### Obtener todas las consultas por docente
+GET http://localhost:3000/api/consultas/byDocente/68e8063a981579261dc68530
+
+### Obtener por dictado en horario
+GET http://localhost:3000/api/consultas/byDictado/68e8084c981579261dc68537/inHorario/2025-11-01T13:00:00.000Z/2025-11-01T13:30:00.000Z
+
+### Obtener por docente en horario
+GET http://localhost:3000/api/consultas/byDocente/68e8063a981579261dc68530/inHorario/2025-11-01T13:00:00.000Z/2025-11-01T13:30:00.000Z
+
+### Obtener por materia
+GET http://localhost:3000/api/consultas/byMateria/68e8071a981579261dc68535
+
+### Obtener por materia en horario
+GET http://localhost:3000/api/consultas/byMateria/68e8071a981579261dc68535/inHorario/2025-11-01T13:00:00.000Z/2025-11-01T14:00:00.000Z

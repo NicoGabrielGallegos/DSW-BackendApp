@@ -58,6 +58,11 @@ async function sanitizeInput(req: Request, res: Response, next: NextFunction) {
             res.status(400).send({ message: "La consulta ingresada ya finalizó o fue cancelada" })
             return
         }
+        // Si el alumno ya está inscripto a esa consulta
+        if (await inscripcionRepository.findOneByFilter({alumno: ObjectId.createFromHexString(alumno), consulta: ObjectId.createFromHexString(consulta)})) {
+            res.status(400).send({ message: "Ya está inscripto a esta consulta" })
+            return
+        }
         // Si el alumno ya tiene inscripciones en ese rango horario
         if ((await inscripcionRepository.findAllByAlumnoInHorario({ alumno: req.body.sanitizedInput.alumno, horaInicio: consultaRecuperada.horaInicio, horaFin: consultaRecuperada.horaFin })).length !== 0) {
             res.status(400).send({ message: "El horario de la consulta a la que intenta inscribirse se superpone con el de otra consulta a la que está inscripto"})
@@ -172,4 +177,19 @@ async function findAllByConsulta(req: Request, res: Response) {
     res.json({ data: await inscripcionRepository.findAllByFilter({ consulta: new ObjectId(consulta) }) })
 }
 
-export { extractInput, sanitizeInput, findAll, findOne, add, update, remove, findAllByAlumno, findAllByConsulta }
+async function findAllByAlumnoInHorario(req: Request, res: Response) {
+    let alumno = req.params.alumno
+    if (!ObjectId.isValid(alumno)) {
+        res.status(400).send({ message: "El id de alumno ingresado no es válido" })
+        return
+    }
+    let horaInicio = req.params.horaInicio
+    let horaFin = req.params.horaFin
+    if (isNaN(Date.parse(horaInicio)) || isNaN(Date.parse(horaFin))) {
+        res.status(400).send({ message: "El rango horario ingresado no es válido" })
+        return
+    }
+    res.json({ data: await inscripcionRepository.findAllByAlumnoInHorario({ alumno: new ObjectId(alumno), horaInicio: new Date(horaInicio), horaFin: new Date(horaFin) }) })
+}
+
+export { extractInput, sanitizeInput, findAll, findOne, add, update, remove, findAllByAlumno, findAllByConsulta, findAllByAlumnoInHorario }

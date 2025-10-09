@@ -9,7 +9,7 @@ POST http://localhost:3000/api/materias
 Content-Type: application/json
 
 {
-    "descripcion": "Bases de Datos"
+    "descripcion": "JAVA"
 }
 
 ### Modificar una materia (total)

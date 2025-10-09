@@ -210,6 +210,24 @@ async function findAllByDictado(req: Request, res: Response) {
     res.json({ data: await consultaRepository.findAllByFilter({ dictado: new ObjectId(dictado) }) })
 }
 
+async function findAllByDocente(req: Request, res: Response) {
+    let docente = req.params.docente
+    if (!ObjectId.isValid(docente)) {
+        res.status(400).send({ message: "El id de docente ingresado no es válido" })
+        return
+    }
+    res.json({ data: await consultaRepository.findAllByDocente({ docente: new ObjectId(docente) }) })
+}
+
+async function findAllByMateria(req: Request, res: Response) {
+    let materia = req.params.materia
+    if (!ObjectId.isValid(materia)) {
+        res.status(400).send({ message: "El id de materia ingresado no es válido" })
+        return
+    }
+    res.json({ data: await consultaRepository.findAllByMateria({ materia: new ObjectId(materia) }) })
+}
+
 async function findAllInHorario(req: Request, res: Response) {
     let horaInicio = req.params.horaInicio
     let horaFin = req.params.horaFin
@@ -220,9 +238,49 @@ async function findAllInHorario(req: Request, res: Response) {
     res.json({ data: await consultaRepository.findAllInHorario({ horaInicio: new Date(horaInicio), horaFin: new Date(horaFin) }) })
 }
 
-// TODO:
-// findAllByDictadoInHorario
-// findAllByDocente
-// findAllByMateria
+async function findAllByDictadoInHorario(req: Request, res: Response) {
+    let dictado = req.params.dictado
+    if (!ObjectId.isValid(dictado)) {
+        res.status(400).send({ message: "El id de dictado ingresado no es válido" })
+        return
+    }
+    let horaInicio = req.params.horaInicio
+    let horaFin = req.params.horaFin
+    if (isNaN(Date.parse(horaInicio)) || isNaN(Date.parse(horaFin))) {
+        res.status(400).send({ message: "El rango horario ingresado no es válido" })
+        return
+    }
+    res.json({ data: await consultaRepository.findAllByDictadoInHorario({ dictado: new ObjectId(dictado), horaInicio: new Date(horaInicio), horaFin: new Date(horaFin) }) })
+}
 
-export { extractInput, sanitizeInput, findAll, findOne, add, update, remove, findAllByDictado, findAllInHorario }
+async function findAllByDocenteInHorario(req: Request, res: Response) {
+    let docente = req.params.docente
+    if (!ObjectId.isValid(docente)) {
+        res.status(400).send({ message: "El id de docente ingresado no es válido" })
+        return
+    }
+    let horaInicio = req.params.horaInicio
+    let horaFin = req.params.horaFin
+    if (isNaN(Date.parse(horaInicio)) || isNaN(Date.parse(horaFin))) {
+        res.status(400).send({ message: "El rango horario ingresado no es válido" })
+        return
+    }
+    res.json({ data: await consultaRepository.findAllByDocenteInHorario({ docente: new ObjectId(docente), horaInicio: new Date(horaInicio), horaFin: new Date(horaFin) }) })
+}
+
+async function findAllByMateriaInHorario(req: Request, res: Response) {
+    let materia = req.params.materia
+    if (!ObjectId.isValid(materia)) {
+        res.status(400).send({ message: "El id de materia ingresado no es válido" })
+        return
+    }
+    let horaInicio = req.params.horaInicio
+    let horaFin = req.params.horaFin
+    if (isNaN(Date.parse(horaInicio)) || isNaN(Date.parse(horaFin))) {
+        res.status(400).send({ message: "El rango horario ingresado no es válido" })
+        return
+    }
+    res.json({ data: await consultaRepository.findAllByMateriaInHorario({ materia: new ObjectId(materia), horaInicio: new Date(horaInicio), horaFin: new Date(horaFin) }) })
+}
+
+export { extractInput, sanitizeInput, findAll, findOne, add, update, remove, findAllByDictado, findAllByDocente, findAllByMateria, findAllInHorario, findAllByDictadoInHorario, findAllByDocenteInHorario, findAllByMateriaInHorario }

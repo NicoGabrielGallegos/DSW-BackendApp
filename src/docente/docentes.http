@@ -9,11 +9,11 @@ POST http://localhost:3000/api/docentes
 Content-Type: application/json
 
 {
-    "legajo": "61444",
-    "nombre": "Joel",
-    "apellido": "Arnold",
-    "correo": "joelarnold@gmail.com",
-    "password": "asdf"
+    "legajo": "61555",
+    "nombre": "Adrián",
+    "apellido": "Meca",
+    "correo": "adrianmeca@gmail.com",
+    "password": "123asd"
 }
 
 ### Modificar un docente (total)
