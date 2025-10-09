@@ -57,4 +57,40 @@ export class ConsultaRepository implements Repository<Consulta> {
             horaFin: { $gt: filter.horaInicio }
         }).toArray()
     }
+
+    public async findAllByDocenteInHorario(filter: { docente: ObjectId, horaInicio: Date, horaFin: Date }): Promise<Consulta[]> {
+        const consultasByDocenteInHorario: Consulta[] = [];
+        (await consultas.aggregate([
+            {
+                $match: {
+                    horaInicio: { $lt: filter.horaFin },
+                    horaFin: { $gt: filter.horaInicio }
+                }
+            },
+            {
+                $lookup: {
+                    from: "dictados",
+                    localField: "dictado",
+                    foreignField: "_id",
+                    as: "dictado",
+                    pipeline: [
+                        {
+                            $project: {
+                                docente: 1
+                            }
+                        }
+                    ]
+                }
+            },
+            {
+                $match: {
+                    dictado: { $elemMatch: { docente: filter.docente } }
+                }
+            },
+        ]).toArray()).forEach((consulta) => {
+            consultasByDocenteInHorario.push({ dictado: consulta.dictado._id, horaInicio: consulta.horaInicio, horaFin: consulta.horaFin, estado: consulta.estado })
+        });
+
+        return consultasByDocenteInHorario
+    }
 }

@@ -30,11 +30,14 @@ async function sanitizeInput(req: Request, res: Response, next: NextFunction) {
             return
         }
         // Si no existe un dictado con el id ingresado
-        if (!(await dictadoRepository.findOne({ id: dictado }))) {
+        const dictadoRecuperado = await dictadoRepository.findOne({ id: dictado })
+        if (!(dictadoRecuperado)) {
             res.status(404).send({ message: `Dictado con id '${dictado}' no encontrado` })
             return
         }
         req.body.sanitizedInput.dictado = ObjectId.createFromHexString(dictado)
+        // Guardar el docente para realizar una validación luego
+        req.body.sanitizedInput.docente = dictadoRecuperado.docente
     }
 
     // Validar hora de inicio
@@ -136,11 +139,11 @@ async function findOne(req: Request, res: Response) {
 }
 
 async function add(req: Request, res: Response) {
-    const { dictado, horaInicio, horaFin, estado } = req.body.sanitizedInput
+    const { dictado, horaInicio, horaFin, estado, docente } = req.body.sanitizedInput
 
-    // Asegurar que la consulta no se superponga a otra del mismo dictado
-    if ((await consultaRepository.findAllByDictadoInHorario({ dictado, horaInicio, horaFin })).length !== 0) {
-        res.status(400).send({ message: "Ya existe una consulta para este dictado que se superpone con el rango de horario dado" })
+    // Asegurar que la consulta no se superponga a otra del mismo docente
+    if ((await consultaRepository.findAllByDocenteInHorario({ docente, horaInicio, horaFin })).length !== 0) {
+        res.status(400).send({ message: "Ya existe una consulta para el docente de este dictado que se superpone con el rango de horario dado" })
         return
     }
 

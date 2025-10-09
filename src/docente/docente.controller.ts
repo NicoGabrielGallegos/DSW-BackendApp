@@ -87,8 +87,8 @@ async function findOne(req: Request, res: Response) {
 }
 
 async function add(req: Request, res: Response) {
-    const { legajo, nombre, apellido, correo } = req.body.sanitizedInput
-    const docenteInput = new Docente(legajo, nombre, apellido, correo)
+    const { legajo, nombre, apellido, correo, password } = req.body.sanitizedInput
+    const docenteInput = new Docente(legajo, nombre, apellido, correo, password)
     try {
         const docente = await docenteRepository.add(docenteInput)
         res.status(201).send({ message: "Docente creado con éxito", data: docente })

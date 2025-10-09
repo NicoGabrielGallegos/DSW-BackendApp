@@ -9,10 +9,11 @@ POST http://localhost:3000/api/docentes
 Content-Type: application/json
 
 {
-    "legajo": "61555",
-    "nombre": "Adrián",
-    "apellido": "Meca",
-    "correo": "adrianmeca@gmail.com"
+    "legajo": "61444",
+    "nombre": "Joel",
+    "apellido": "Arnold",
+    "correo": "joelarnold@gmail.com",
+    "password": "asdf"
 }
 
 ### Modificar un docente (total)
@@ -36,4 +37,4 @@ Content-Type: application/json
 }
 
 ### Borrar un docente
-DELETE http://localhost:3000/api/docentes/68e17f48ba0b677f358abbda
+DELETE http://localhost:3000/api/docentes/68e7cb33f8e4a752f55713d8

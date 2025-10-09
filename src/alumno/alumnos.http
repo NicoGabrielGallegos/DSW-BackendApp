@@ -28,12 +28,11 @@ Content-Type: application/json
 }
 
 ### Modificar un alumno (parcial)
-PATCH http://localhost:3000/api/alumnos/68e1461e6b8e442bfe1df0f8
+PATCH http://localhost:3000/api/alumnos/68db4f7bcb69faa5fccebea5
 Content-Type: application/json
 
 {
-    "nombre": "Mark",
-    "apellido": "Twain"
+    "password": "asd123"
 }
 
 ### Borrar un alumno

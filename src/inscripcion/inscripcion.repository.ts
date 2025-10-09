@@ -58,7 +58,9 @@ export class InscripcionRepository implements Repository<Inscripcion> {
                 }
             },
             {
-                $match: { consulta: { horaInicio: { $lt: filter.horaFin }, horaFin: { $gt: filter.horaInicio} } }
+                $match: {
+                    consulta: { $elemMatch: { horaInicio: { $lt: filter.horaFin }, horaFin: { $gt: filter.horaInicio} } }
+                }
             },
             {
                 $project: { "alumno": 1, "consulta": 1 }

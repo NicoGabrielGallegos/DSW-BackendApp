@@ -9,10 +9,10 @@ POST http://localhost:3000/api/consultas
 Content-Type: application/json
 
 {
-    "dictado": "68df29b3123fac0290cebea5",
-    "horaInicio": "2025-10-03T13:15:00.000Z",
-    "horaFin": "2025-10-03T13:30:00.000Z",
-    "estado": "Pendiente"
+    "dictado": "68e7cd4ff8e4a752f55713eb",
+    "horaInicio": "2025-10-10T13:00:00.000Z",
+    "horaFin": "2025-10-10T13:15:00.000Z",
+    "estado": "Programada"
 }
 
 ### Modificar una consultas (total)
@@ -36,4 +36,4 @@ Content-Type: application/json
 }
 
 ### Borrar una consultas
-DELETE http://localhost:3000/api/consultas/68db6360d0c15dc14f9e628f
+DELETE http://localhost:3000/api/consultas/68e7cf8cf8e4a752f55713f0
