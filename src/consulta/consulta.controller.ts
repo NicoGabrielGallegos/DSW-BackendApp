@@ -2,150 +2,224 @@ import { Request, Response, NextFunction } from "express"
 import { ConsultaRepository } from "./consulta.repository.js"
 import { Consulta, EstadoConsulta } from "./consulta.entity.js"
 import { ObjectId } from "mongodb"
+import { DictadoRepository } from "../dictado/dictado.repository.js"
 
-const repository = new ConsultaRepository()
+const consultaRepository = new ConsultaRepository()
+const dictadoRepository = new DictadoRepository()
 
-function sanitizeConsultaInput(req: Request, res: Response, next: NextFunction) {
-    req.body.sanitizedInput = {
+function extractInput(req: Request, res: Response, next: NextFunction) {
+    req.body.input = {
         dictado: req.body.dictado,
-        horaInicioStr: req.body.horaInicio,
-        horaFinStr: req.body.horaFin,
+        horaInicio: req.body.horaInicio,
+        horaFin: req.body.horaFin,
         estado: req.body.estado,
     }
-    
-    const {dictado, horaInicioStr, horaFinStr, estado} = req.body.sanitizedInput
+    next()
+}
+
+async function sanitizeInput(req: Request, res: Response, next: NextFunction) {
+    const { dictado, horaInicio, horaFin, estado } = req.body.input
+    req.body.sanitizedInput = {}
 
     // Verificar dictado
-    // Chequear undefined solo con el método POST
-    if (dictado !== undefined || req.method === "POST") {
-        // Si es un id válido
-        if (ObjectId.isValid(dictado))  {
-            req.body.sanitizedInput.dictado = ObjectId.createFromHexString(dictado)
-        } else {
-            res.status(400).send({message: "El id de dictado ingresado no es válido"})
+    // No chequear para undefined
+    if (dictado !== undefined) {
+        // Si el id no es válido
+        if (!ObjectId.isValid(dictado)) {
+            res.status(400).send({ message: "El id de dictado ingresado no es válido" })
             return
         }
+        // Si no existe un dictado con el id ingresado
+        if (!(await dictadoRepository.findOne({ id: dictado }))) {
+            res.status(404).send({ message: `Dictado con id '${dictado}' no encontrado` })
+            return
+        }
+        req.body.sanitizedInput.dictado = ObjectId.createFromHexString(dictado)
     }
 
     // Validar hora de inicio
-    // Chequear undefined solo con el método POST
-    if (horaInicioStr !== undefined || req.method === "POST") {
+    // No chequear para undefined
+    if (horaInicio !== undefined) {
         // Si no es una fecha válida
-        if (isNaN(Date.parse(horaInicioStr))) {
-            res.status(400).send({message: "La hora de inicio ingresada no es válida"})
+        if (isNaN(Date.parse(horaInicio))) {
+            res.status(400).send({ message: "La hora de inicio ingresada no es válida" })
             return
-        } else {
-            const horaInicio = new Date(horaInicioStr)
-            // Si la fecha es anterior a hoy
-            if (horaInicio.getTime() - Date.now() < 0) {
-                res.status(400).send({message: "La hora de inicio debe ser de un día posterior a hoy"})
-                return
-            } else {
-                req.body.sanitizedInput.horaInicio = horaInicio
-                delete req.body.sanitizedInput.horaInicioStr
-            }
         }
+        const horaInicioDate = new Date(horaInicio)
+        // Si la fecha es anterior a hoy
+        if (horaInicioDate.getTime() - Date.now() < 0) {
+            res.status(400).send({ message: "La hora de inicio debe ser de un día posterior a hoy" })
+            return
+        }
+        req.body.sanitizedInput.horaInicio = horaInicioDate
     }
 
     // Validar hora de fin
-    // Chequear undefined solo con el método POST
-    if (horaFinStr !== undefined || req.method === "POST") {
+    // No chequear para undefined
+    if (horaFin !== undefined) {
         // Si no es una hora válida
-        if (isNaN(Date.parse(horaFinStr))) {
-            res.status(400).send({message: "La hora de fin ingresada no es válida"})
+        if (isNaN(Date.parse(horaFin))) {
+            res.status(400).send({ message: "La hora de fin ingresada no es válida" })
             return
-        } else {
-            const horaFin = new Date(horaFinStr)
-            // Si la hora es hoy o anterior
-            if (horaFin.getTime() - Date.now() < 0) {
-                res.status(400).send({message: "La hora de fin debe ser de un día posterior a hoy"})
-                return
-            } else {
-                req.body.sanitizedInput.horaFin = horaFin
-                delete req.body.sanitizedInput.horaFinStr
-            }
         }
+        const horaFinDate = new Date(horaFin)
+        // Si la hora es hoy o anterior
+        if (horaFinDate.getTime() - Date.now() < 0) {
+            res.status(400).send({ message: "La hora de fin debe ser de un día posterior a hoy" })
+            return
+        }
+        req.body.sanitizedInput.horaFin = horaFinDate
     }
 
-    // Verificar que el estado de la consulta sea
+    // Verificar que el estado de la consulta sea válido
     // Chequear solo si no es undefined
     if (estado !== undefined) {
-        // Si es un estado válido
-        if (Object.values(EstadoConsulta).includes(estado)) {
-            req.body.sanitizedInput.estado = estado
-        } else {
-            res.status(400).send({message: "El estado de la consulta no es válido"})
+        // Si no es un estado válido
+        if (!Object.values(EstadoConsulta).includes(estado)) {
+            res.status(400).send({ message: "El estado de la consulta no es válido" })
             return
         }
-    // Si es undefined, asignar default solo con el método POST
+        req.body.sanitizedInput.estado = estado
+        // Si es undefined, asignar default solo con el método POST
     } else if (req.method === "POST") {
         req.body.sanitizedInput.estado = EstadoConsulta.Programada.toString()
     }
 
+    delete req.body.input
     // Eliminar keys sin valores asignados
     Object.keys(req.body.sanitizedInput).forEach(key => {
-        if(req.body.sanitizedInput[key] === undefined) {
+        if (req.body.sanitizedInput[key] === undefined) {
             delete req.body.sanitizedInput[key]
         }
     })
     next()
 }
 
+function handleError(res: Response, err: any) {
+    switch (err.code) {
+        case 11000: // DuplicateKey
+            const key = Object.keys(err.errorResponse.keyValue)[0]
+            const value = Object.values(err.errorResponse.keyValue)[0]
+            res.status(400).send({ message: `La operación no se pudo completar, '${key}: ${value}' ya existe` })
+            return
+        case 121: // DocumentValidationFailure
+            let error_message = "Ocurrió un problema al intentar validar las siguiente propiedades: "
+
+            // Si se agregan más validaciones al esquema, esta validación sería necesaria
+            // let detalles = err.errorResponse.errInfo.details
+            // if (detalles.operatorName === "$jsonSchema" && detalles.schemaRulesNotSatisfied[0] === "operatorName")
+
+            err.errorResponse.errInfo.details.schemaRulesNotSatisfied[0].propertiesNotSatisfied.forEach((property: { propertyName: string }) => {
+                error_message += `${property.propertyName}, `
+            });
+            res.status(400).send({ message: error_message.slice(0, -2) })
+            break
+        default:
+            res.status(400).send({ message: err })
+            return
+    }
+}
+
+// ----- Operaciones CRUD comunes -----
+
 async function findAll(_req: Request, res: Response) {
-    res.json({data: await repository.findAll()})
+    res.json({ data: await consultaRepository.findAll() })
 }
 
 async function findOne(req: Request, res: Response) {
-    const consulta = await repository.findOne({id: req.params.id})
+    const consulta = await consultaRepository.findOne({ id: req.params.id })
     if (!consulta) {
-        res.status(404).send({message: "Consulta no encontrada"})
+        res.status(404).send({ message: "Consulta no encontrada" })
         return
     }
-    res.json({data: consulta})
+    res.json({ data: consulta })
 }
 
 async function add(req: Request, res: Response) {
-    const {dictado, horaInicio, horaFin, estado} = req.body.sanitizedInput
+    const { dictado, horaInicio, horaFin, estado } = req.body.sanitizedInput
+
+    // Asegurar que la consulta no se superponga a otra del mismo dictado
+    if ((await consultaRepository.findAllByDictadoInHorario({ dictado, horaInicio, horaFin })).length !== 0) {
+        res.status(400).send({ message: "Ya existe una consulta para este dictado que se superpone con el rango de horario dado" })
+        return
+    }
 
     // Asegurar una duración mínima de 15 minutos
-    if (horaInicio.getTime() + 900000 <= horaFin.getTime()) {
-        const consultaInput = new Consulta(dictado, horaInicio, horaFin, estado)
-        const consulta = await repository.add(consultaInput)
-        res.status(201).send({message: "Consulta creada con éxito", data: consulta})
-    } else {
-        res.status(400).send({message: "La hora de fin de la consulta debe ser al menos 15 minutos posterior a la hora de inicio"})
+    if (horaInicio.getTime() + 900000 > horaFin.getTime()) {
+        res.status(400).send({ message: "La hora de fin de la consulta debe ser al menos 15 minutos posterior a la hora de inicio" })
+        return
+    }
+
+    const consultaInput = new Consulta(dictado, horaInicio, horaFin, estado)
+    try {
+        const consulta = await consultaRepository.add(consultaInput)
+        res.status(201).send({ message: "Consulta creada con éxito", data: consulta })
+    } catch (err: any) {
+        handleError(res, err)
     }
 }
 
 async function update(req: Request, res: Response) {
-    const consultaRecuperada = await repository.findOne({id: req.params.id})
+    const consultaRecuperada = await consultaRepository.findOne({ id: req.params.id })
     if (!consultaRecuperada) {
-        res.status(404).send({message: "Consulta no encontrada"})
+        res.status(404).send({ message: "Consulta no encontrada" })
         return
     }
-    
+
     let nuevaHoraInicio = req.body.sanitizedInput.horaInicio ?? consultaRecuperada.horaInicio
     let nuevaHoraFin = req.body.sanitizedInput.horaFin ?? consultaRecuperada.horaFin
 
-    if (nuevaHoraInicio.getTime() + 900000 <= nuevaHoraFin.getTime()) {
-        const consulta = await repository.update({id: req.params.id}, req.body.sanitizedInput)
+    // Asegurar una duración mínima de 15 minutos
+    if (nuevaHoraInicio.getTime() + 900000 > nuevaHoraFin.getTime()) {
+        res.status(400).send({ message: "La hora de fin de la consulta debe ser al menos 15 minutos posterior a la hora de inicio" })
+        return
+    }
+
+    try {
+        const consulta = await consultaRepository.update({ id: req.params.id }, req.body.sanitizedInput)
         if (!consulta) {
-            res.status(404).send({message: "Consulta no encontrada"})
+            res.status(404).send({ message: "Consulta no encontrada" })
             return
         }
-        res.status(201).send({message: "Consulta modificada con éxito", data: consulta})
-    } else {
-        res.status(400).send({message: "La hora de fin de la consulta debe ser al menos 15 minutos posterior a la hora de inicio"})
+        res.status(201).send({ message: "Consulta modificada con éxito", data: consulta })
+    } catch (err: any) {
+        handleError(res, err)
     }
 }
 
 async function remove(req: Request, res: Response) {
-    const consulta = await repository.delete({id: req.params.id})
+    const consulta = await consultaRepository.delete({ id: req.params.id })
     if (!consulta) {
-        res.status(404).send({message: "Consulta no encontrada"})
+        res.status(404).send({ message: "Consulta no encontrada" })
         return
     }
-    res.status(200).send({message: "Consulta borrada con éxito", data: consulta})
+    res.status(200).send({ message: "Consulta borrada con éxito", data: consulta })
 }
 
-export {sanitizeConsultaInput, findAll, findOne, add, update, remove}
+// ----- Operaciones específicas -----
+
+async function findAllByDictado(req: Request, res: Response) {
+    let dictado = req.params.dictado
+    if (!ObjectId.isValid(dictado)) {
+        res.status(400).send({ message: "El id de dictado ingresado no es válido" })
+        return
+    }
+    res.json({ data: await consultaRepository.findAllByFilter({ dictado: new ObjectId(dictado) }) })
+}
+
+async function findAllInHorario(req: Request, res: Response) {
+    let horaInicio = req.params.horaInicio
+    let horaFin = req.params.horaFin
+    if (isNaN(Date.parse(horaInicio)) || isNaN(Date.parse(horaFin))) {
+        res.status(400).send({ message: "El rango horario ingresado no es válido" })
+        return
+    }
+    res.json({ data: await consultaRepository.findAllInHorario({ horaInicio: new Date(horaInicio), horaFin: new Date(horaFin) }) })
+}
+
+// TODO:
+// findAllByDictadoInHorario
+// findAllByDocente
+// findAllByMateria
+
+export { extractInput, sanitizeInput, findAll, findOne, add, update, remove, findAllByDictado, findAllInHorario }
