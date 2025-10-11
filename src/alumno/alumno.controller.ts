@@ -174,7 +174,16 @@ async function login(req: Request, res: Response) {
         return
     }
 
-    const token = jwk.sign({ alumnoId: alumno._id }, PRIVATE_KEY, { expiresIn: "1h" })
+    const payload = {
+        id: alumno._id?.toString() || "",
+        legajo: alumno.legajo,
+        nombre: alumno.nombre,
+        apellido: alumno.apellido,
+        correo: alumno.correo,
+        rol: "alumno"
+    }
+
+    const token = jwk.sign({user: payload}, PRIVATE_KEY, { expiresIn: "1h" })
 
     res.json({ data: token })
 }
