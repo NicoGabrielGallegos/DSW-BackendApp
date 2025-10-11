@@ -1,11 +1,12 @@
 import { Router } from "express";
 import { add, findAll, findOne, update, remove, extractInput, sanitizeInput, findOneByDescripcion, findAllByDocente } from "./materia.controller.js";
 import { assureCompleteInput } from "../shared/controller.middlewares.js";
+import { auth } from "../shared/auth/auth.controller.js";
 
 export const materiaRouter = Router()
 
 // Rutas comunes
-materiaRouter.get("/", findAll)
+materiaRouter.get("/", auth, findAll)
 materiaRouter.get("/:id", findOne)
 materiaRouter.post("/", extractInput, assureCompleteInput, sanitizeInput, add)
 materiaRouter.put("/:id", extractInput, sanitizeInput, update)

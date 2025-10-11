@@ -12,9 +12,9 @@ export function assureCompleteInput(req: Request, res: Response, next: NextFunct
     })
 
     if (error) {
-        res.status(400).send({ message: error_message.slice(0, -2)})
+        res.status(400).send({ message: error_message.slice(0, -2) })
         return
     }
-    
+
     next()
 }

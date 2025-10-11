@@ -2,9 +2,11 @@ import { Request, Response, NextFunction } from "express"
 import { AlumnoRepository } from "./alumno.repository.js"
 import { Alumno } from "./alumno.entity.js"
 import { isValidEmail } from "../shared/validations.js"
-import { hash } from "bcryptjs"
+import { compare, hash } from "bcryptjs"
 import { ObjectId } from "mongodb"
 import { InscripcionRepository } from "../inscripcion/inscripcion.repository.js"
+import jwk from 'jsonwebtoken'
+import { PRIVATE_KEY } from "../shared/auth/auth.controller.js"
 
 const alumnoRepository = new AlumnoRepository()
 const inscripcionRepository = new InscripcionRepository()
@@ -60,7 +62,7 @@ function handleError(res: Response, err: any) {
             return
         case 121: // DocumentValidationFailure
             let error_message = "Ocurrió un problema al intentar validar las siguiente propiedades: "
-            
+
             // Si se agregan más validaciones al esquema, esta validación sería necesaria
             // let detalles = err.errorResponse.errInfo.details
             // if (detalles.operatorName === "$jsonSchema" && detalles.schemaRulesNotSatisfied[0] === "operatorName")
@@ -68,7 +70,7 @@ function handleError(res: Response, err: any) {
             err.errorResponse.errInfo.details.schemaRulesNotSatisfied[0].propertiesNotSatisfied.forEach((property: { propertyName: string }) => {
                 error_message += `${property.propertyName}, `
             });
-            res.status(400).send({ message: error_message.slice(0, -2)})
+            res.status(400).send({ message: error_message.slice(0, -2) })
             break
         default:
             res.status(400).send({ message: err })
@@ -148,4 +150,33 @@ async function findAllByConsulta(req: Request, res: Response) {
     res.json({ data: await alumnoRepository.findAllByConsulta({ consulta: new ObjectId(consulta) }) })
 }
 
-export { extractInput, sanitizeInput, findAll, findOne, add, update, remove, findOneByCorreo, findAllByConsulta }
+// ----- Login -----
+
+async function login(req: Request, res: Response) {
+    const { correo, password } = req.body.input
+
+    // Verificar que el alumno exista
+    if (!isValidEmail(correo)) {
+        res.status(400).send({ message: "Correo o contraseña incorrectos" })
+        return
+    }
+    const alumno = await alumnoRepository.findOneByFilter({ correo })
+    if (!alumno) {
+        res.status(400).json({ message: "Correo o contraseña incorrectos" })
+        return
+    }
+
+    // Verificar que la contraseña sea correcta
+    const passwordMatch = await compare(password, alumno.password)
+
+    if (!passwordMatch) {
+        res.status(400).json({ message: "Correo o contraseña incorrectos" })
+        return
+    }
+
+    const token = jwk.sign({ alumnoId: alumno._id }, PRIVATE_KEY, { expiresIn: "1h" })
+
+    res.json({ data: token })
+}
+
+export { extractInput, sanitizeInput, findAll, findOne, add, update, remove, findOneByCorreo, findAllByConsulta, login }

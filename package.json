@@ -12,14 +12,16 @@
   "license": "ISC",
   "packageManager": "pnpm@10.7.0",
   "dependencies": {
-    "@types/cors": "^2.8.19",
     "bcryptjs": "^3.0.2",
     "cors": "^2.8.5",
     "express": "5.1.0",
+    "jsonwebtoken": "^9.0.2",
     "mongodb": "6.20.0"
   },
   "devDependencies": {
+    "@types/cors": "^2.8.19",
     "@types/express": "5.0.1",
+    "@types/jsonwebtoken": "^9.0.10",
     "@types/node": "22.14.1",
     "tsc-watch": "6.2.1",
     "typescript": "5.8.3"
