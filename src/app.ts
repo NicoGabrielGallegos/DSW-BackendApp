@@ -5,9 +5,16 @@ import { materiaRouter } from "./materia/materia.routes.js"
 import { dictadoRouter } from "./dictado/dictado.routes.js"
 import { consultaRouter } from "./consulta/consulta.routes.js"
 import { inscripcionRouter } from "./inscripcion/inscripcion.routes.js"
+import cors from "cors"
+
 
 // Crear aplicación Express
 const app = express()
+
+// Permitir solicitudes desde el Frontend
+app.use(cors({
+    origin: "http://localhost:5173"
+}))
 
 // Middleware para escuchar únicamente peticiones donde el header 'Content-Type' sea de tipo 'application/json'
 app.use(express.json())
