@@ -54,10 +54,10 @@ function handleError(res: Response, err: any) {
 // ----- Operaciones CRUD comunes -----
 
 async function findAll(req: Request, res: Response) {
-    const {page, limit} = getSanitizedQuery(req)
+    const { page, limit } = getSanitizedQuery(req)
 
-    const materias = await materiaRepository.findAll({page, limit})
-    res.json({ data: materias, page, totalPages: limit === 0 ? 1 : (materias.length / limit) })
+    const materias = await materiaRepository.findAll({ page, limit })
+    res.json({ data: materias, total: await materiaRepository.countMaterias(), page, totalPages: limit === 0 ? 1 : (materias.length / limit) })
 }
 
 async function findOne(req: Request, res: Response) {
@@ -123,10 +123,10 @@ async function findAllByDocente(req: Request, res: Response) {
         return
     }
 
-    const {page, limit} = getSanitizedQuery(req)
+    const { page, limit } = getSanitizedQuery(req)
 
-    const materiasByDocente = await materiaRepository.findAllByDocente({ docente: new ObjectId(docente) }, {page, limit})
-    res.json({ data: materiasByDocente, page, totalPages: limit === 0 ? 1 : (materiasByDocente.length / limit) })
+    const materiasByDocente = await materiaRepository.findAllByDocente({ docente: new ObjectId(docente) }, { page, limit })
+    res.json({ data: materiasByDocente, total: await materiaRepository.countMateriasByDocente({ docente: new ObjectId(docente) }), page, totalPages: limit === 0 ? 1 : (materiasByDocente.length / limit) })
 }
 
 export { extractInput, sanitizeInput, findAll, findOne, add, update, remove, findOneByDescripcion, findAllByDocente }

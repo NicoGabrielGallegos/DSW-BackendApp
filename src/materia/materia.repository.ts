@@ -47,7 +47,7 @@ export class MateriaRepository implements Repository<Materia> {
 
     public async findAllByDocente(filter: { docente: ObjectId }, options: { page: number, limit: number } = { page: 1, limit: 0 }): Promise<Materia[]> {
         const materiasByDocente: Materia[] = [];
-        const cursor = await dictados.aggregate([
+        const cursor = dictados.aggregate([
             {
                 $match: filter
             },
@@ -71,9 +71,9 @@ export class MateriaRepository implements Repository<Materia> {
         if (options.limit > 0) {
             // Aplicar skip solo si la página es válida
             if (options.page > 1) {
-                await cursor.skip((options.page - 1) * options.limit)
+                cursor.skip((options.page - 1) * options.limit)
             }
-            await cursor.limit(options.limit)
+            cursor.limit(options.limit)
         }
 
 
@@ -82,5 +82,28 @@ export class MateriaRepository implements Repository<Materia> {
         });
 
         return materiasByDocente
+    }
+
+    public async countMaterias(): Promise<number> {
+        return await materias.countDocuments()
+    }
+
+    public async countMateriasByDocente(filter: { docente: ObjectId }, options: { page: number, limit: number } = { page: 1, limit: 0 }): Promise<number> {
+        return (await dictados.aggregate([
+            {
+                $match: filter
+            },
+            {
+                $lookup: {
+                    from: "materias",
+                    localField: "materia",
+                    foreignField: "_id",
+                    as: "materia"
+                }
+            },
+            {
+                $count: "count"
+            }
+        ]).toArray())[0].count;
     }
 }
