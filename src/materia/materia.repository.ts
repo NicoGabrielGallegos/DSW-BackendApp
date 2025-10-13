@@ -9,8 +9,8 @@ const dictados = db.collection<Dictado>("dictados")
 
 export class MateriaRepository implements Repository<Materia> {
 
-    public async findAll(): Promise<Materia[] | undefined> {
-        return await materias.find().toArray()
+    public async findAll(options: { page: number, limit: number } = { page: 1, limit: 0 }): Promise<Materia[]> {
+        return await materias.find().sort({ descripcion: 1 }).skip((options.page - 1) * options.limit).limit(options.limit).toArray()
     }
 
     public async findOne(filter: { id: string }): Promise<Materia | undefined> {
@@ -37,17 +37,17 @@ export class MateriaRepository implements Repository<Materia> {
         return await materias.findOneAndDelete({ _id }) || undefined
     }
 
-    public async findOneByFilter(filter: { descripcion?: string}): Promise<Materia | undefined> {
+    public async findOneByFilter(filter: { descripcion?: string }): Promise<Materia | undefined> {
         return await materias.findOne(filter) || undefined
     }
 
     public async findAllByFilter(filter: { descripcion?: string }): Promise<Materia[] | undefined> {
-        return await materias.find(filter).toArray() || undefined
+        return await materias.find(filter).sort({ descripcion: 1 }).toArray() || undefined
     }
 
-    public async findAllByDocente(filter: { docente: ObjectId }): Promise<Materia[] | undefined> {
+    public async findAllByDocente(filter: { docente: ObjectId }, options: { page: number, limit: number } = { page: 1, limit: 0 }): Promise<Materia[]> {
         const materiasByDocente: Materia[] = [];
-        (await dictados.aggregate([
+        const cursor = await dictados.aggregate([
             {
                 $match: filter
             },
@@ -61,9 +61,23 @@ export class MateriaRepository implements Repository<Materia> {
             },
             {
                 $project: { "materia": 1 }
+            },
+            {
+                $sort: { "materia.descripcion": 1 }
             }
+        ])
 
-        ]).toArray()).forEach((dictado) => {
+        // Aplicar filtros de paginación solo si el límite es positivo
+        if (options.limit > 0) {
+            // Aplicar skip solo si la página es válida
+            if (options.page > 1) {
+                await cursor.skip((options.page - 1) * options.limit)
+            }
+            await cursor.limit(options.limit)
+        }
+
+
+        (await cursor.toArray()).forEach((dictado) => {
             materiasByDocente.push(dictado.materia[0])
         });
 
