@@ -8,7 +8,7 @@ const dictados = db.collection<Dictado>("dictados")
 export class DictadoRepository implements Repository<Dictado> {
 
     public async findAll(options: { page: number, limit: number } = { page: 1, limit: 0 }): Promise<Dictado[]> {
-        return await dictados.find().sort({ legajo: 1 }).skip((options.page - 1) * options.limit).limit(options.limit).toArray()
+        return await dictados.find().sort({ materia: 1, docente: 1 }).skip((options.page - 1) * options.limit).limit(options.limit).toArray()
     }
 
     public async findOne(filter: { id: string }): Promise<Dictado | undefined> {
@@ -40,7 +40,7 @@ export class DictadoRepository implements Repository<Dictado> {
     }
 
     public async findAllByFilter(filter: { docente?: ObjectId, materia?: ObjectId }, options: { page: number, limit: number } = { page: 1, limit: 0 }): Promise<Dictado[]> {
-        return await dictados.find(filter).sort({ legajo: 1 }).skip((options.page - 1) * options.limit).limit(options.limit).toArray() || undefined
+        return await dictados.find(filter).sort({ materia: 1, docente: 1 }).skip((options.page - 1) * options.limit).limit(options.limit).toArray() || undefined
     }
 
     public async deleteByDocente(filter: { docente: ObjectId }): Promise<void> {
