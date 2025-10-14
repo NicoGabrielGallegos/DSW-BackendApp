@@ -9,8 +9,8 @@ const dictados = db.collection<Dictado>("dictados")
 
 export class DocenteRepository implements Repository<Docente> {
 
-    public async findAll(): Promise<Docente[] | undefined> {
-        return await docentes.find().toArray()
+    public async findAll(options: { page: number, limit: number } = { page: 1, limit: 0 }): Promise<Docente[]> {
+        return await docentes.find().sort({ legajo: 1 }).skip((options.page - 1) * options.limit).limit(options.limit).toArray()
     }
 
     public async findOne(filter: { id: string }): Promise<Docente | undefined> {
@@ -45,7 +45,7 @@ export class DocenteRepository implements Repository<Docente> {
         return await docentes.find(filter).toArray() || undefined
     }
 
-    public async findAllByMateria(filter: { materia: ObjectId }): Promise<Docente[]> {
+    public async findAllByMateria(filter: { materia: ObjectId }, options: { page: number, limit: number } = { page: 1, limit: 0 }): Promise<Docente[]> {
         const docentesByMateria: Docente[] = [];
         (await dictados.aggregate([
             {
@@ -61,6 +61,9 @@ export class DocenteRepository implements Repository<Docente> {
             },
             {
                 $project: { "docente": 1 }
+            },
+            {
+                $sort: { "docente.legajo": 1 }
             }
 
         ]).toArray()).forEach((dictado) => {
@@ -68,5 +71,28 @@ export class DocenteRepository implements Repository<Docente> {
         });
 
         return docentesByMateria
+    }
+
+    public async count(): Promise<number> {
+        return await docentes.countDocuments()
+    }
+
+    public async countByMateria(filter: { materia: ObjectId }, options: { page: number, limit: number } = { page: 1, limit: 0 }): Promise<number> {
+        return (await dictados.aggregate([
+            {
+                $match: filter
+            },
+            {
+                $lookup: {
+                    from: "docentes",
+                    localField: "docente",
+                    foreignField: "_id",
+                    as: "docente"
+                }
+            },
+            {
+                $count: "count"
+            }
+        ]).toArray())[0].count;
     }
 }

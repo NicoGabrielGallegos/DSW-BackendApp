@@ -5,6 +5,7 @@ import { isValidEmail } from "../shared/validations.js";
 import { hash } from "bcryptjs";
 import { ObjectId } from "mongodb";
 import { DictadoRepository } from "../dictado/dictado.repository.js";
+import { getSanitizedQuery } from "../shared/controller.middlewares.js";
 
 const docenteRepository = new DocenteRepository()
 const dictadoRepository = new DictadoRepository()
@@ -73,8 +74,11 @@ function handleError(res: Response, err: any) {
 
 // ----- Operaciones CRUD comunes -----
 
-async function findAll(_req: Request, res: Response) {
-    res.json({ data: await docenteRepository.findAll() })
+async function findAll(req: Request, res: Response) {
+    const { page, limit } = getSanitizedQuery(req)
+
+    const docentes = await docenteRepository.findAll({ page, limit })
+    res.json({ data: docentes, total: await docenteRepository.count(), page, totalPages: limit === 0 ? 1 : (docentes.length / limit) })
 }
 
 async function findOne(req: Request, res: Response) {
@@ -139,6 +143,12 @@ async function findAllByMateria(req: Request, res: Response) {
         res.status(400).send({ message: "El id de materia ingresado no es válido" })
         return
     }
+
+    const { page, limit } = getSanitizedQuery(req)
+
+    const docentesByMateria = await docenteRepository.findAllByMateria({ materia: new ObjectId(materia) }, { page, limit })
+        res.json({ data: docentesByMateria, total: await docenteRepository.countByMateria({ materia: new ObjectId(materia) }), page, totalPages: limit === 0 ? 1 : (docentesByMateria.length / limit) })
+
     res.json({ data: await docenteRepository.findAllByMateria({ materia: new ObjectId(materia) }) })
 }
 

@@ -84,11 +84,11 @@ export class MateriaRepository implements Repository<Materia> {
         return materiasByDocente
     }
 
-    public async countMaterias(): Promise<number> {
+    public async count(): Promise<number> {
         return await materias.countDocuments()
     }
 
-    public async countMateriasByDocente(filter: { docente: ObjectId }, options: { page: number, limit: number } = { page: 1, limit: 0 }): Promise<number> {
+    public async countByDocente(filter: { docente: ObjectId }, options: { page: number, limit: number } = { page: 1, limit: 0 }): Promise<number> {
         return (await dictados.aggregate([
             {
                 $match: filter

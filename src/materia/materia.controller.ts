@@ -57,7 +57,7 @@ async function findAll(req: Request, res: Response) {
     const { page, limit } = getSanitizedQuery(req)
 
     const materias = await materiaRepository.findAll({ page, limit })
-    res.json({ data: materias, total: await materiaRepository.countMaterias(), page, totalPages: limit === 0 ? 1 : (materias.length / limit) })
+    res.json({ data: materias, total: await materiaRepository.count(), page, totalPages: limit === 0 ? 1 : (materias.length / limit) })
 }
 
 async function findOne(req: Request, res: Response) {
@@ -126,7 +126,7 @@ async function findAllByDocente(req: Request, res: Response) {
     const { page, limit } = getSanitizedQuery(req)
 
     const materiasByDocente = await materiaRepository.findAllByDocente({ docente: new ObjectId(docente) }, { page, limit })
-    res.json({ data: materiasByDocente, total: await materiaRepository.countMateriasByDocente({ docente: new ObjectId(docente) }), page, totalPages: limit === 0 ? 1 : (materiasByDocente.length / limit) })
+    res.json({ data: materiasByDocente, total: await materiaRepository.countByDocente({ docente: new ObjectId(docente) }), page, totalPages: limit === 0 ? 1 : (materiasByDocente.length / limit) })
 }
 
 export { extractInput, sanitizeInput, findAll, findOne, add, update, remove, findOneByDescripcion, findAllByDocente }
