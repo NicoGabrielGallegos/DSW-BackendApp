@@ -104,6 +104,6 @@ export class MateriaRepository implements Repository<Materia> {
             {
                 $count: "count"
             }
-        ]).toArray())[0].count;
+        ]).toArray())[0]?.count || 0;
     }
 }

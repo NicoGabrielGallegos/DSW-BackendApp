@@ -4,6 +4,7 @@ import { Dictado } from "./dictado.entity.js"
 import { ObjectId } from "mongodb"
 import { DocenteRepository } from "../docente/docente.repository.js"
 import { MateriaRepository } from "../materia/materia.repository.js"
+import { getSanitizedQuery } from "../shared/controller.middlewares.js"
 
 const dictadoRepository = new DictadoRepository()
 const docenteRepository = new DocenteRepository()
@@ -68,9 +69,9 @@ async function sanitizeInput(req: Request, res: Response, next: NextFunction) {
 function handleError(res: Response, err: any) {
     switch (err.code) {
         case 11000: // DuplicateKey
-            const key = Object.keys(err.errorResponse.keyValue)[0]
-            const value = Object.values(err.errorResponse.keyValue)[0]
-            res.status(400).send({ message: `La operación no se pudo completar, '${key}: ${value}' ya existe` })
+            const keys = Object.keys(err.errorResponse.keyValue)
+            const values = Object.values(err.errorResponse.keyValue)
+            res.status(400).send({ message: `La operación no se pudo completar, la combinación '${keys[0]}: ${values[0]}, ${keys[1]}: ${values[1]}' ya existe` })
             return
         case 121: // DocumentValidationFailure
             let error_message = "Ocurrió un problema al intentar validar las siguiente propiedades: "
@@ -92,8 +93,11 @@ function handleError(res: Response, err: any) {
 
 // ----- Operaciones CRUD comunes -----
 
-async function findAll(_req: Request, res: Response) {
-    res.json({ data: await dictadoRepository.findAll() })
+async function findAll(req: Request, res: Response) {
+    const { page, limit } = getSanitizedQuery(req)
+
+    const dictados = await dictadoRepository.findAll({ page, limit })
+    res.json({ data: dictados, total: await dictadoRepository.count(), page, totalPages: limit === 0 ? 1 : (dictados.length / limit) })
 }
 
 async function findOne(req: Request, res: Response) {
@@ -146,7 +150,11 @@ async function findAllByDocente(req: Request, res: Response) {
         res.status(400).send({ message: "El id de docente ingresado no es válido" })
         return
     }
-    res.json({ data: await dictadoRepository.findAllByFilter({ docente: new ObjectId(docente) }) })
+
+    const { page, limit } = getSanitizedQuery(req)
+
+    const dictadosByDocente = await dictadoRepository.findAllByFilter({ docente: new ObjectId(docente) }, { page, limit })
+    res.json({ data: dictadosByDocente, total: await dictadoRepository.countByFilter({ docente: new ObjectId(docente) }), page, totalPages: limit === 0 ? 1 : (dictadosByDocente.length / limit) })
 }
 
 async function findAllByMateria(req: Request, res: Response) {
@@ -155,7 +163,11 @@ async function findAllByMateria(req: Request, res: Response) {
         res.status(400).send({ message: "El id de materia ingresado no es válido" })
         return
     }
-    res.json({ data: await dictadoRepository.findAllByFilter({ materia: new ObjectId(materia) }) })
+
+    const { page, limit } = getSanitizedQuery(req)
+
+    const dictadosByMateria = await dictadoRepository.findAllByFilter({ materia: new ObjectId(materia) }, { page, limit })
+    res.json({ data: dictadosByMateria, total: await dictadoRepository.countByFilter({ materia: new ObjectId(materia) }), page, totalPages: limit === 0 ? 1 : (dictadosByMateria.length / limit) })
 }
 
 export { extractInput, sanitizeInput, findAll, findOne, add, update, remove, findAllByDocente, findAllByMateria }

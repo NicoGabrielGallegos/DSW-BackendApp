@@ -93,6 +93,6 @@ export class DocenteRepository implements Repository<Docente> {
             {
                 $count: "count"
             }
-        ]).toArray())[0].count;
+        ]).toArray())[0]?.count || 0;
     }
 }

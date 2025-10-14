@@ -147,9 +147,7 @@ async function findAllByMateria(req: Request, res: Response) {
     const { page, limit } = getSanitizedQuery(req)
 
     const docentesByMateria = await docenteRepository.findAllByMateria({ materia: new ObjectId(materia) }, { page, limit })
-        res.json({ data: docentesByMateria, total: await docenteRepository.countByMateria({ materia: new ObjectId(materia) }), page, totalPages: limit === 0 ? 1 : (docentesByMateria.length / limit) })
-
-    res.json({ data: await docenteRepository.findAllByMateria({ materia: new ObjectId(materia) }) })
+    res.json({ data: docentesByMateria, total: await docenteRepository.countByMateria({ materia: new ObjectId(materia) }), page, totalPages: limit === 0 ? 1 : (docentesByMateria.length / limit) })
 }
 
 export { extractInput, sanitizeInput, findAll, findOne, add, update, remove, findOneByCorreo, findAllByMateria }
