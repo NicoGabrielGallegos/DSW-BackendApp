@@ -76,7 +76,6 @@ export class MateriaRepository implements Repository<Materia> {
             cursor.limit(options.limit)
         }
 
-
         (await cursor.toArray()).forEach((dictado) => {
             materiasByDocente.push(dictado.materia[0])
         });

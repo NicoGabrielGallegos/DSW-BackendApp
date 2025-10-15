@@ -170,4 +170,19 @@ async function findAllByMateria(req: Request, res: Response) {
     res.json({ data: dictadosByMateria, total: await dictadoRepository.countByFilter({ materia: new ObjectId(materia) }), page, totalPages: limit === 0 ? 1 : (dictadosByMateria.length / limit) })
 }
 
-export { extractInput, sanitizeInput, findAll, findOne, add, update, remove, findAllByDocente, findAllByMateria }
+async function findOneByDocenteAndMateria(req: Request, res: Response) {
+    let docente = req.params.docente
+    if (!ObjectId.isValid(docente)) {
+        res.status(400).send({ message: "El id de docente ingresado no es válido" })
+        return
+    }
+    let materia = req.params.docente
+    if (!ObjectId.isValid(materia)) {
+        res.status(400).send({ message: "El id de materia ingresado no es válido" })
+        return
+    }
+
+    res.json({data: await dictadoRepository.findOneByFilter({docente: new ObjectId(docente), materia: new ObjectId(materia)})})
+}
+
+export { extractInput, sanitizeInput, findAll, findOne, add, update, remove, findAllByDocente, findAllByMateria, findOneByDocenteAndMateria }

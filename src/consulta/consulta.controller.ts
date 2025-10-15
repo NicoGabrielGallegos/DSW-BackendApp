@@ -215,8 +215,8 @@ async function findAllByDictado(req: Request, res: Response) {
     const { page, limit } = getSanitizedQuery(req)
 
     const filter = { dictado: new ObjectId(dictado) }
-    const consultas = await consultaRepository.findAllByFilter(filter)
-    res.json({ data: consultas, total: consultaRepository.countByFilter(filter), page, totalPages: limit === 0 ? 1 : (consultas.length / limit) })
+    const consultas = await consultaRepository.findAllByFilter(filter, { page, limit })
+    res.json({ data: consultas, total: await consultaRepository.countByFilter(filter), page, totalPages: limit === 0 ? 1 : (consultas.length / limit) })
 }
 
 async function findAllByDocente(req: Request, res: Response) {
@@ -229,8 +229,9 @@ async function findAllByDocente(req: Request, res: Response) {
     const { page, limit } = getSanitizedQuery(req)
 
     const filter = { docente: new ObjectId(docente) }
-    const consultas = await consultaRepository.findAllByDocente(filter)
-    res.json({ data: consultaRepository, total: consultaRepository.countByDocente(filter), page, totalPages: limit === 0 ? 1 : (consultas.length / limit) })
+    const consultas = await consultaRepository.findAllByDocente(filter, { page, limit })
+
+    res.json({ data: consultas, total: await consultaRepository.countByDocente(filter), page, totalPages: limit === 0 ? 1 : (consultas.length / limit) })
 }
 
 async function findAllByMateria(req: Request, res: Response) {
@@ -243,8 +244,8 @@ async function findAllByMateria(req: Request, res: Response) {
     const { page, limit } = getSanitizedQuery(req)
 
     const filter = { materia: new ObjectId(materia) }
-    const consultas = await consultaRepository.findAllByMateria(filter)
-    res.json({ data: consultaRepository, total: consultaRepository.countByMateria(filter), page, totalPages: limit === 0 ? 1 : (consultas.length / limit) })
+    const consultas = await consultaRepository.findAllByMateria(filter, { page, limit })
+    res.json({ data: consultas, total: await consultaRepository.countByMateria(filter), page, totalPages: limit === 0 ? 1 : (consultas.length / limit) })
 }
 
 async function findAllInHorario(req: Request, res: Response) {
@@ -258,8 +259,8 @@ async function findAllInHorario(req: Request, res: Response) {
     const { page, limit } = getSanitizedQuery(req)
 
     const filter = { horaInicio: { $ge: new Date(horaInicio) }, horaFin: { $le: new Date(horaFin) } }
-    const consultas = await consultaRepository.findAllByFilter(filter)
-    res.json({ data: consultaRepository, total: consultaRepository.countByFilter(filter), page, totalPages: limit === 0 ? 1 : (consultas.length / limit) })
+    const consultas = await consultaRepository.findAllByFilter(filter, { page, limit })
+    res.json({ data: consultas, total: await consultaRepository.countByFilter(filter), page, totalPages: limit === 0 ? 1 : (consultas.length / limit) })
 }
 
 async function findAllByDictadoInHorario(req: Request, res: Response) {
@@ -278,7 +279,7 @@ async function findAllByDictadoInHorario(req: Request, res: Response) {
     const { page, limit } = getSanitizedQuery(req)
 
     const filter = { dictado: new ObjectId(dictado), horaInicio: { $ge: new Date(horaInicio) }, horaFin: { $le: new Date(horaFin) } }
-    const consultas = await consultaRepository.findAllByFilter(filter)
+    const consultas = await consultaRepository.findAllByFilter(filter, { page, limit })
     res.json({ data: consultas, total: await consultaRepository.countByFilter(filter), page, totalPages: limit === 0 ? 1 : (consultas.length / limit) })
 }
 
@@ -298,7 +299,7 @@ async function findAllByDocenteInHorario(req: Request, res: Response) {
     const { page, limit } = getSanitizedQuery(req)
 
     const filter = { docente: new ObjectId(docente), horaInicio: { $ge: new Date(horaInicio) }, horaFin: { $le: new Date(horaFin) } }
-    const consultas = await consultaRepository.findAllByDocente(filter)
+    const consultas = await consultaRepository.findAllByDocente(filter, { page, limit })
     res.json({ data: consultas, total: await consultaRepository.countByDocente(filter), page, totalPages: limit === 0 ? 1 : (consultas.length / limit) })
 }
 
@@ -318,7 +319,7 @@ async function findAllByMateriaInHorario(req: Request, res: Response) {
     const { page, limit } = getSanitizedQuery(req)
 
     const filter = { materia: new ObjectId(materia), horaInicio: { $ge: new Date(horaInicio) }, horaFin: { $le: new Date(horaFin) } }
-    const consultas = await consultaRepository.findAllByMateria(filter)
+    const consultas = await consultaRepository.findAllByMateria(filter, { page, limit })
     res.json({ data: consultas, total: await consultaRepository.countByMateria(filter), page, totalPages: limit === 0 ? 1 : (consultas.length / limit) })
 }
 

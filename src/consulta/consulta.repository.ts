@@ -9,6 +9,13 @@ type DateFilter = Date | { $lt?: Date, $gt?: Date, $le?: Date, $ge?: Date }
 
 export class ConsultaRepository implements Repository<Consulta> {
 
+    private getRangoHorario(filter: { horaInicio?: DateFilter, horaFin?: DateFilter }): { horaInicio?: DateFilter, horaFin?: DateFilter } {
+        const rangoHorario: { horaInicio?: DateFilter, horaFin?: DateFilter } = {}
+        if (filter.horaInicio) rangoHorario.horaInicio = filter.horaInicio
+        if (filter.horaFin) rangoHorario.horaFin = filter.horaFin
+        return rangoHorario
+    }
+
     public async findAll(options: { page: number, limit: number } = { page: 1, limit: 0 }): Promise<Consulta[]> {
         return await consultas.find().sort({ horaInicio: 1, horaFin: 1, dictado: 1 }).skip((options.page - 1) * options.limit).limit(options.limit).toArray()
     }
@@ -47,12 +54,10 @@ export class ConsultaRepository implements Repository<Consulta> {
 
     public async findAllByDocente(filter: { docente: ObjectId, horaInicio?: DateFilter, horaFin?: DateFilter }, options: { page: number, limit: number } = { page: 1, limit: 0 }): Promise<Consulta[]> {
         const consultasByDocente: Consulta[] = [];
-        (await consultas.aggregate([
+
+        const cursor = consultas.aggregate([
             {
-                $match: {
-                    horaInicio: filter.horaInicio,
-                    horaFin: filter.horaFin
-                }
+                $match: this.getRangoHorario(filter)
             },
             {
                 $lookup: {
@@ -74,7 +79,18 @@ export class ConsultaRepository implements Repository<Consulta> {
                     dictado: { $elemMatch: { docente: filter.docente } }
                 }
             },
-        ]).sort({ horaInicio: 1, horaFin: 1, dictado: 1 }).skip((options.page - 1) * options.limit).limit(options.limit).toArray()).forEach((consulta) => {
+        ]).sort({ horaInicio: 1, horaFin: 1, dictado: 1 })
+
+        // Aplicar filtros de paginación solo si el límite es positivo
+        if (options.limit > 0) {
+            // Aplicar skip solo si la página es válida
+            if (options.page > 1) {
+                cursor.skip((options.page - 1) * options.limit)
+            }
+            cursor.limit(options.limit)
+        }
+
+        (await cursor.toArray()).forEach((consulta) => {
             consultasByDocente.push({ _id: consulta._id, dictado: consulta.dictado[0]._id, horaInicio: consulta.horaInicio, horaFin: consulta.horaFin, estado: consulta.estado })
         });
 
@@ -83,12 +99,9 @@ export class ConsultaRepository implements Repository<Consulta> {
 
     public async findAllByMateria(filter: { materia: ObjectId, horaInicio?: DateFilter, horaFin?: DateFilter }, options: { page: number, limit: number } = { page: 1, limit: 0 }): Promise<Consulta[]> {
         const consultasByMateria: Consulta[] = [];
-        (await consultas.aggregate([
+        const cursor = consultas.aggregate([
             {
-                $match: {
-                    horaInicio: filter.horaInicio,
-                    horaFin: filter.horaFin
-                }
+                $match: this.getRangoHorario(filter)
             },
             {
                 $lookup: {
@@ -110,7 +123,18 @@ export class ConsultaRepository implements Repository<Consulta> {
                     dictado: { $elemMatch: { materia: filter.materia } }
                 }
             },
-        ]).sort({ horaInicio: 1, horaFin: 1, dictado: 1 }).skip((options.page - 1) * options.limit).limit(options.limit).toArray()).forEach((consulta) => {
+        ]).sort({ horaInicio: 1, horaFin: 1, dictado: 1 })
+
+        // Aplicar filtros de paginación solo si el límite es positivo
+        if (options.limit > 0) {
+            // Aplicar skip solo si la página es válida
+            if (options.page > 1) {
+                cursor.skip((options.page - 1) * options.limit)
+            }
+            cursor.limit(options.limit)
+        }
+
+        (await cursor.toArray()).forEach((consulta) => {
             consultasByMateria.push({ _id: consulta._id, dictado: consulta.dictado[0]._id, horaInicio: consulta.horaInicio, horaFin: consulta.horaFin, estado: consulta.estado })
         });
 
@@ -125,13 +149,10 @@ export class ConsultaRepository implements Repository<Consulta> {
         return await consultas.countDocuments(filter)
     }
 
-    public async countByDocente(filter: { docente: ObjectId, horaInicio?: DateFilter, horaFin?: DateFilter }): Promise<Consulta[]> {
+    public async countByDocente(filter: { docente: ObjectId, horaInicio?: DateFilter, horaFin?: DateFilter }): Promise<number> {
         return (await consultas.aggregate([
             {
-                $match: {
-                    horaInicio: filter.horaInicio,
-                    horaFin: filter.horaFin
-                }
+                $match: this.getRangoHorario(filter)
             },
             {
                 $lookup: {
@@ -149,13 +170,10 @@ export class ConsultaRepository implements Repository<Consulta> {
         ]).toArray())[0]?.count || 0;
     }
 
-    public async countByMateria(filter: { materia: ObjectId, horaInicio?: DateFilter, horaFin?: DateFilter }): Promise<Consulta[]> {
+    public async countByMateria(filter: { materia: ObjectId, horaInicio?: DateFilter, horaFin?: DateFilter }): Promise<number> {
         return (await consultas.aggregate([
             {
-                $match: {
-                    horaInicio: filter.horaInicio,
-                    horaFin: filter.horaFin
-                }
+                $match: this.getRangoHorario(filter)
             },
             {
                 $lookup: {

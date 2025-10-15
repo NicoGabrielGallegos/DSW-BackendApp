@@ -47,7 +47,7 @@ export class DocenteRepository implements Repository<Docente> {
 
     public async findAllByMateria(filter: { materia: ObjectId }, options: { page: number, limit: number } = { page: 1, limit: 0 }): Promise<Docente[]> {
         const docentesByMateria: Docente[] = [];
-        (await dictados.aggregate([
+        const cursor = dictados.aggregate([
             {
                 $match: filter
             },
@@ -66,7 +66,18 @@ export class DocenteRepository implements Repository<Docente> {
                 $sort: { "docente.legajo": 1 }
             }
 
-        ]).toArray()).forEach((dictado) => {
+        ])
+
+        // Aplicar filtros de paginación solo si el límite es positivo
+        if (options.limit > 0) {
+            // Aplicar skip solo si la página es válida
+            if (options.page > 1) {
+                cursor.skip((options.page - 1) * options.limit)
+            }
+            cursor.limit(options.limit)
+        }
+
+        (await cursor.toArray()).forEach((dictado) => {
             docentesByMateria.push(dictado.docente[0])
         });
 

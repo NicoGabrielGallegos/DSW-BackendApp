@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { add, findAll, findOne, update, remove, extractInput, sanitizeInput, findAllByDocente, findAllByMateria } from "./dictado.controller.js";
+import { add, findAll, findOne, update, remove, extractInput, sanitizeInput, findAllByDocente, findAllByMateria, findOneByDocenteAndMateria } from "./dictado.controller.js";
 import { assureCompleteInput } from "../shared/controller.middlewares.js";
 
 export const dictadoRouter = Router()
@@ -15,3 +15,4 @@ dictadoRouter.delete("/:id", remove)
 // Rutas adicionales
 dictadoRouter.get("/byDocente/:docente", findAllByDocente)
 dictadoRouter.get("/byMateria/:materia", findAllByMateria)
+dictadoRouter.get("/byDocente/:docente/byMateria/:materia", findOneByDocenteAndMateria)
