@@ -3,6 +3,7 @@ import { ConsultaRepository } from "./consulta.repository.js"
 import { Consulta, EstadoConsulta } from "./consulta.entity.js"
 import { ObjectId } from "mongodb"
 import { DictadoRepository } from "../dictado/dictado.repository.js"
+import { getSanitizedQuery } from "../shared/controller.middlewares.js"
 
 const consultaRepository = new ConsultaRepository()
 const dictadoRepository = new DictadoRepository()
@@ -125,8 +126,11 @@ function handleError(res: Response, err: any) {
 
 // ----- Operaciones CRUD comunes -----
 
-async function findAll(_req: Request, res: Response) {
-    res.json({ data: await consultaRepository.findAll() })
+async function findAll(req: Request, res: Response) {
+    const { page, limit } = getSanitizedQuery(req)
+
+    const consultas = await consultaRepository.findAll({ page, limit })
+    res.json({ data: consultas, total: await consultaRepository.count(), page, totalPages: limit === 0 ? 1 : (consultas.length / limit) })
 }
 
 async function findOne(req: Request, res: Response) {
@@ -142,7 +146,7 @@ async function add(req: Request, res: Response) {
     const { dictado, horaInicio, horaFin, estado, docente } = req.body.sanitizedInput
 
     // Asegurar que la consulta no se superponga a otra del mismo docente
-    if ((await consultaRepository.findAllByDocenteInHorario({ docente, horaInicio, horaFin })).length !== 0) {
+    if ((await consultaRepository.findAllByDocente({ docente, horaInicio: { $lt: horaFin }, horaFin: { $gt: horaInicio } })).length !== 0) {
         res.status(400).send({ message: "Ya existe una consulta para el docente de este dictado que se superpone con el rango de horario dado" })
         return
     }
@@ -207,7 +211,12 @@ async function findAllByDictado(req: Request, res: Response) {
         res.status(400).send({ message: "El id de dictado ingresado no es válido" })
         return
     }
-    res.json({ data: await consultaRepository.findAllByFilter({ dictado: new ObjectId(dictado) }) })
+
+    const { page, limit } = getSanitizedQuery(req)
+
+    const filter = { dictado: new ObjectId(dictado) }
+    const consultas = await consultaRepository.findAllByFilter(filter)
+    res.json({ data: consultas, total: consultaRepository.countByFilter(filter), page, totalPages: limit === 0 ? 1 : (consultas.length / limit) })
 }
 
 async function findAllByDocente(req: Request, res: Response) {
@@ -216,7 +225,12 @@ async function findAllByDocente(req: Request, res: Response) {
         res.status(400).send({ message: "El id de docente ingresado no es válido" })
         return
     }
-    res.json({ data: await consultaRepository.findAllByDocente({ docente: new ObjectId(docente) }) })
+
+    const { page, limit } = getSanitizedQuery(req)
+
+    const filter = { docente: new ObjectId(docente) }
+    const consultas = await consultaRepository.findAllByDocente(filter)
+    res.json({ data: consultaRepository, total: consultaRepository.countByDocente(filter), page, totalPages: limit === 0 ? 1 : (consultas.length / limit) })
 }
 
 async function findAllByMateria(req: Request, res: Response) {
@@ -225,7 +239,12 @@ async function findAllByMateria(req: Request, res: Response) {
         res.status(400).send({ message: "El id de materia ingresado no es válido" })
         return
     }
-    res.json({ data: await consultaRepository.findAllByMateria({ materia: new ObjectId(materia) }) })
+    
+    const { page, limit } = getSanitizedQuery(req)
+
+    const filter = { materia: new ObjectId(materia) }
+    const consultas = await consultaRepository.findAllByMateria(filter)
+    res.json({ data: consultaRepository, total: consultaRepository.countByMateria(filter), page, totalPages: limit === 0 ? 1 : (consultas.length / limit) })
 }
 
 async function findAllInHorario(req: Request, res: Response) {
@@ -235,7 +254,12 @@ async function findAllInHorario(req: Request, res: Response) {
         res.status(400).send({ message: "El rango horario ingresado no es válido" })
         return
     }
-    res.json({ data: await consultaRepository.findAllInHorario({ horaInicio: new Date(horaInicio), horaFin: new Date(horaFin) }) })
+    
+    const { page, limit } = getSanitizedQuery(req)
+
+    const filter = { horaInicio: { $ge: new Date(horaInicio) }, horaFin: { $le: new Date(horaFin) } }
+    const consultas = await consultaRepository.findAllByFilter(filter)
+    res.json({ data: consultaRepository, total: consultaRepository.countByFilter(filter), page, totalPages: limit === 0 ? 1 : (consultas.length / limit) })
 }
 
 async function findAllByDictadoInHorario(req: Request, res: Response) {
@@ -250,7 +274,12 @@ async function findAllByDictadoInHorario(req: Request, res: Response) {
         res.status(400).send({ message: "El rango horario ingresado no es válido" })
         return
     }
-    res.json({ data: await consultaRepository.findAllByDictadoInHorario({ dictado: new ObjectId(dictado), horaInicio: new Date(horaInicio), horaFin: new Date(horaFin) }) })
+
+    const { page, limit } = getSanitizedQuery(req)
+
+    const filter = { dictado: new ObjectId(dictado), horaInicio: { $ge: new Date(horaInicio) }, horaFin: { $le: new Date(horaFin) } }
+    const consultas = await consultaRepository.findAllByFilter(filter)
+    res.json({ data: consultas, total: await consultaRepository.countByFilter(filter), page, totalPages: limit === 0 ? 1 : (consultas.length / limit) })
 }
 
 async function findAllByDocenteInHorario(req: Request, res: Response) {
@@ -265,7 +294,12 @@ async function findAllByDocenteInHorario(req: Request, res: Response) {
         res.status(400).send({ message: "El rango horario ingresado no es válido" })
         return
     }
-    res.json({ data: await consultaRepository.findAllByDocenteInHorario({ docente: new ObjectId(docente), horaInicio: new Date(horaInicio), horaFin: new Date(horaFin) }) })
+
+    const { page, limit } = getSanitizedQuery(req)
+
+    const filter = { docente: new ObjectId(docente), horaInicio: { $ge: new Date(horaInicio) }, horaFin: { $le: new Date(horaFin) } }
+    const consultas = await consultaRepository.findAllByDocente(filter)
+    res.json({ data: consultas, total: await consultaRepository.countByDocente(filter), page, totalPages: limit === 0 ? 1 : (consultas.length / limit) })
 }
 
 async function findAllByMateriaInHorario(req: Request, res: Response) {
@@ -280,7 +314,12 @@ async function findAllByMateriaInHorario(req: Request, res: Response) {
         res.status(400).send({ message: "El rango horario ingresado no es válido" })
         return
     }
-    res.json({ data: await consultaRepository.findAllByMateriaInHorario({ materia: new ObjectId(materia), horaInicio: new Date(horaInicio), horaFin: new Date(horaFin) }) })
+
+    const { page, limit } = getSanitizedQuery(req)
+
+    const filter = { materia: new ObjectId(materia), horaInicio: { $ge: new Date(horaInicio) }, horaFin: { $le: new Date(horaFin) } }
+    const consultas = await consultaRepository.findAllByMateria(filter)
+    res.json({ data: consultas, total: await consultaRepository.countByMateria(filter), page, totalPages: limit === 0 ? 1 : (consultas.length / limit) })
 }
 
 export { extractInput, sanitizeInput, findAll, findOne, add, update, remove, findAllByDictado, findAllByDocente, findAllByMateria, findAllInHorario, findAllByDictadoInHorario, findAllByDocenteInHorario, findAllByMateriaInHorario }

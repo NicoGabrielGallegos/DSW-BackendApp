@@ -5,10 +5,12 @@ import { AggregationCursor, ObjectId } from "mongodb";
 
 const consultas = db.collection<Consulta>("consultas")
 
+type DateFilter = Date | { $lt?: Date, $gt?: Date, $le?: Date, $ge?: Date }
+
 export class ConsultaRepository implements Repository<Consulta> {
 
-    public async findAll(): Promise<Consulta[] | undefined> {
-        return await consultas.find().toArray()
+    public async findAll(options: { page: number, limit: number } = { page: 1, limit: 0 }): Promise<Consulta[]> {
+        return await consultas.find().sort({ horaInicio: 1, horaFin: 1, dictado: 1 }).skip((options.page - 1) * options.limit).limit(options.limit).toArray()
     }
 
     public async findOne(filter: { id: string }): Promise<Consulta | undefined> {
@@ -35,17 +37,23 @@ export class ConsultaRepository implements Repository<Consulta> {
         return await consultas.findOneAndDelete({ _id }) || undefined
     }
 
-    public async findOneByFilter(filter: { dictado?: ObjectId, horaInicio?: Date | { $lt?: Date, $gt?: Date }, horaFin?: Date | { $lt?: Date, $gt?: Date }, estado?: string }): Promise<Consulta | undefined> {
+    public async findOneByFilter(filter: { dictado?: ObjectId, horaInicio?: DateFilter, horaFin?: DateFilter, estado?: string }): Promise<Consulta | undefined> {
         return await consultas.findOne(filter) || undefined
     }
 
-    public async findAllByFilter(filter: { dictado?: ObjectId, horaInicio?: Date | { $lt?: Date, $gt?: Date }, horaFin?: Date | { $lt?: Date, $gt?: Date }, estado?: string }): Promise<Consulta[]> {
-        return await consultas.find(filter).toArray() || undefined
+    public async findAllByFilter(filter: { dictado?: ObjectId, horaInicio?: DateFilter, horaFin?: DateFilter, estado?: string }, options: { page: number, limit: number } = { page: 1, limit: 0 }): Promise<Consulta[]> {
+        return await consultas.find(filter).sort({ horaInicio: 1, horaFin: 1, dictado: 1 }).skip((options.page - 1) * options.limit).limit(options.limit).toArray()
     }
 
-    public async findAllByDocente(filter: { docente: ObjectId }): Promise<Consulta[]> {
+    public async findAllByDocente(filter: { docente: ObjectId, horaInicio?: DateFilter, horaFin?: DateFilter }, options: { page: number, limit: number } = { page: 1, limit: 0 }): Promise<Consulta[]> {
         const consultasByDocente: Consulta[] = [];
         (await consultas.aggregate([
+            {
+                $match: {
+                    horaInicio: filter.horaInicio,
+                    horaFin: filter.horaFin
+                }
+            },
             {
                 $lookup: {
                     from: "dictados",
@@ -66,16 +74,22 @@ export class ConsultaRepository implements Repository<Consulta> {
                     dictado: { $elemMatch: { docente: filter.docente } }
                 }
             },
-        ]).toArray()).forEach((consulta) => {
+        ]).sort({ horaInicio: 1, horaFin: 1, dictado: 1 }).skip((options.page - 1) * options.limit).limit(options.limit).toArray()).forEach((consulta) => {
             consultasByDocente.push({ _id: consulta._id, dictado: consulta.dictado[0]._id, horaInicio: consulta.horaInicio, horaFin: consulta.horaFin, estado: consulta.estado })
         });
 
         return consultasByDocente
     }
 
-    public async findAllByMateria(filter: { materia: ObjectId }): Promise<Consulta[]> {
+    public async findAllByMateria(filter: { materia: ObjectId, horaInicio?: DateFilter, horaFin?: DateFilter }, options: { page: number, limit: number } = { page: 1, limit: 0 }): Promise<Consulta[]> {
         const consultasByMateria: Consulta[] = [];
         (await consultas.aggregate([
+            {
+                $match: {
+                    horaInicio: filter.horaInicio,
+                    horaFin: filter.horaFin
+                }
+            },
             {
                 $lookup: {
                     from: "dictados",
@@ -96,35 +110,27 @@ export class ConsultaRepository implements Repository<Consulta> {
                     dictado: { $elemMatch: { materia: filter.materia } }
                 }
             },
-        ]).toArray()).forEach((consulta) => {
+        ]).sort({ horaInicio: 1, horaFin: 1, dictado: 1 }).skip((options.page - 1) * options.limit).limit(options.limit).toArray()).forEach((consulta) => {
             consultasByMateria.push({ _id: consulta._id, dictado: consulta.dictado[0]._id, horaInicio: consulta.horaInicio, horaFin: consulta.horaFin, estado: consulta.estado })
         });
 
         return consultasByMateria
     }
 
-    public async findAllInHorario(filter: { horaInicio: Date, horaFin: Date }): Promise<Consulta[]> {
-        return await consultas.find({
-            horaInicio: { $lt: filter.horaFin },
-            horaFin: { $gt: filter.horaInicio }
-        }).toArray()
+    public async count(): Promise<number> {
+        return await consultas.countDocuments()
     }
 
-    public async findAllByDictadoInHorario(filter: { dictado: ObjectId, horaInicio: Date, horaFin: Date }): Promise<Consulta[]> {
-        return await consultas.find({
-            dictado: filter.dictado,
-            horaInicio: { $lt: filter.horaFin },
-            horaFin: { $gt: filter.horaInicio }
-        }).toArray()
+    public async countByFilter(filter: { dictado?: ObjectId, horaInicio?: DateFilter, horaFin?: DateFilter, estado?: string }): Promise<number> {
+        return await consultas.countDocuments(filter)
     }
 
-    public async findAllByDocenteInHorario(filter: { docente: ObjectId, horaInicio: Date, horaFin: Date }): Promise<Consulta[]> {
-        const consultasByDocenteInHorario: Consulta[] = [];
-        (await consultas.aggregate([
+    public async countByDocente(filter: { docente: ObjectId, horaInicio?: DateFilter, horaFin?: DateFilter }): Promise<Consulta[]> {
+        return (await consultas.aggregate([
             {
                 $match: {
-                    horaInicio: { $lt: filter.horaFin },
-                    horaFin: { $gt: filter.horaInicio }
+                    horaInicio: filter.horaInicio,
+                    horaFin: filter.horaFin
                 }
             },
             {
@@ -133,13 +139,6 @@ export class ConsultaRepository implements Repository<Consulta> {
                     localField: "dictado",
                     foreignField: "_id",
                     as: "dictado",
-                    pipeline: [
-                        {
-                            $project: {
-                                docente: 1
-                            }
-                        }
-                    ]
                 }
             },
             {
@@ -147,20 +146,15 @@ export class ConsultaRepository implements Repository<Consulta> {
                     dictado: { $elemMatch: { docente: filter.docente } }
                 }
             },
-        ]).toArray()).forEach((consulta) => {
-            consultasByDocenteInHorario.push({ _id: consulta._id, dictado: consulta.dictado[0]._id, horaInicio: consulta.horaInicio, horaFin: consulta.horaFin, estado: consulta.estado })
-        });
-
-        return consultasByDocenteInHorario
+        ]).toArray())[0]?.count || 0;
     }
 
-    public async findAllByMateriaInHorario(filter: { materia: ObjectId, horaInicio: Date, horaFin: Date }): Promise<Consulta[]> {
-        const consultasByMateriaInHorario: Consulta[] = [];
-        (await consultas.aggregate([
+    public async countByMateria(filter: { materia: ObjectId, horaInicio?: DateFilter, horaFin?: DateFilter }): Promise<Consulta[]> {
+        return (await consultas.aggregate([
             {
                 $match: {
-                    horaInicio: { $lt: filter.horaFin },
-                    horaFin: { $gt: filter.horaInicio }
+                    horaInicio: filter.horaInicio,
+                    horaFin: filter.horaFin
                 }
             },
             {
@@ -169,13 +163,6 @@ export class ConsultaRepository implements Repository<Consulta> {
                     localField: "dictado",
                     foreignField: "_id",
                     as: "dictado",
-                    pipeline: [
-                        {
-                            $project: {
-                                materia: 1
-                            }
-                        }
-                    ]
                 }
             },
             {
@@ -183,10 +170,6 @@ export class ConsultaRepository implements Repository<Consulta> {
                     dictado: { $elemMatch: { materia: filter.materia } }
                 }
             },
-        ]).toArray()).forEach((consulta) => {
-            consultasByMateriaInHorario.push({ _id: consulta._id, dictado: consulta.dictado[0]._id, horaInicio: consulta.horaInicio, horaFin: consulta.horaFin, estado: consulta.estado })
-        });
-
-        return consultasByMateriaInHorario
+        ]).toArray())[0]?.count || 0;
     }
 }
