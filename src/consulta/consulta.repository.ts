@@ -167,6 +167,9 @@ export class ConsultaRepository implements Repository<Consulta> {
                     dictado: { $elemMatch: { docente: filter.docente } }
                 }
             },
+            {
+                $count: "count"
+            }
         ]).toArray())[0]?.count || 0;
     }
 
@@ -188,6 +191,9 @@ export class ConsultaRepository implements Repository<Consulta> {
                     dictado: { $elemMatch: { materia: filter.materia } }
                 }
             },
+            {
+                $count: "count"
+            }
         ]).toArray())[0]?.count || 0;
     }
 }
