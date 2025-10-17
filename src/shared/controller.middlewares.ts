@@ -19,7 +19,7 @@ export function assureCompleteInput(req: Request, res: Response, next: NextFunct
     next()
 }
 
-export function getSanitizedQuery(req: Request) {
+export function getSanitizedPaginationParams(req: Request) {
     let page: number
     try {
         page = parseInt(req.query.p?.toString() || "") || 1
@@ -37,4 +37,14 @@ export function getSanitizedQuery(req: Request) {
     }
 
     return { page, limit }
+}
+
+export function getSanitizedDateTimeRangeParams(req: Request) {
+    let horaInicio: string = req.query.i?.toString() || ""
+    let horaFin: string = req.query.f?.toString() || ""
+
+    return {
+        horaInicio: isNaN(Date.parse(horaInicio)) ? "" : horaInicio,
+        horaFin: isNaN(Date.parse(horaFin)) ? "" : horaFin
+    }
 }

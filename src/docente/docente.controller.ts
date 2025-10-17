@@ -5,7 +5,7 @@ import { isValidEmail } from "../shared/validations.js";
 import { hash } from "bcryptjs";
 import { ObjectId } from "mongodb";
 import { DictadoRepository } from "../dictado/dictado.repository.js";
-import { getSanitizedQuery } from "../shared/controller.middlewares.js";
+import { getSanitizedPaginationParams } from "../shared/controller.middlewares.js";
 
 const docenteRepository = new DocenteRepository()
 const dictadoRepository = new DictadoRepository()
@@ -75,7 +75,7 @@ function handleError(res: Response, err: any) {
 // ----- Operaciones CRUD comunes -----
 
 async function findAll(req: Request, res: Response) {
-    const { page, limit } = getSanitizedQuery(req)
+    const { page, limit } = getSanitizedPaginationParams(req)
 
     const docentes = await docenteRepository.findAll({ page, limit })
     res.json({ data: docentes, total: await docenteRepository.count(), page, totalPages: limit === 0 ? 1 : (docentes.length / limit) })
@@ -144,7 +144,7 @@ async function findAllByMateria(req: Request, res: Response) {
         return
     }
 
-    const { page, limit } = getSanitizedQuery(req)
+    const { page, limit } = getSanitizedPaginationParams(req)
 
     const docentesByMateria = await docenteRepository.findAllByMateria({ materia: new ObjectId(materia) }, { page, limit })
     res.json({ data: docentesByMateria, total: await docenteRepository.countByMateria({ materia: new ObjectId(materia) }), page, totalPages: limit === 0 ? 1 : (docentesByMateria.length / limit) })

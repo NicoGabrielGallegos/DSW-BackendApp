@@ -2,10 +2,10 @@ import { Repository } from "../shared/repository.js";
 import { Consulta } from "./consulta.entity.js";
 import { db } from "../shared/db/connection.js";
 import { AggregationCursor, ObjectId } from "mongodb";
+import { DateFilter } from "../shared/types/DateFilter.js";
 
 const consultas = db.collection<Consulta>("consultas")
 
-type DateFilter = Date | { $lt?: Date, $gt?: Date, $le?: Date, $ge?: Date }
 
 export class ConsultaRepository implements Repository<Consulta> {
 

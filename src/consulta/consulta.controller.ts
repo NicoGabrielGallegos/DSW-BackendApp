@@ -3,7 +3,8 @@ import { ConsultaRepository } from "./consulta.repository.js"
 import { Consulta, EstadoConsulta } from "./consulta.entity.js"
 import { ObjectId } from "mongodb"
 import { DictadoRepository } from "../dictado/dictado.repository.js"
-import { getSanitizedQuery } from "../shared/controller.middlewares.js"
+import { getSanitizedDateTimeRangeParams, getSanitizedPaginationParams } from "../shared/controller.middlewares.js"
+import { DateFilter } from "../shared/types/DateFilter.js"
 
 const consultaRepository = new ConsultaRepository()
 const dictadoRepository = new DictadoRepository()
@@ -127,10 +128,15 @@ function handleError(res: Response, err: any) {
 // ----- Operaciones CRUD comunes -----
 
 async function findAll(req: Request, res: Response) {
-    const { page, limit } = getSanitizedQuery(req)
+    const { page, limit } = getSanitizedPaginationParams(req)
+    const { horaInicio, horaFin } = getSanitizedDateTimeRangeParams(req)
 
-    const consultas = await consultaRepository.findAll({ page, limit })
-    res.json({ data: consultas, total: await consultaRepository.count(), page, totalPages: limit === 0 ? 1 : (consultas.length / limit) })
+    const filter: { horaInicio?: DateFilter, horaFin?: DateFilter } = {}
+    if (horaInicio !== "") filter.horaInicio = { $gte: new Date(horaInicio) }
+    if (horaFin !== "") filter.horaFin = { $lte: new Date(horaFin) }
+
+    const consultas = await consultaRepository.findAllByFilter(filter, { page, limit })
+    res.json({ data: consultas, total: await consultaRepository.countByFilter(filter), page, totalPages: limit === 0 ? 1 : (consultas.length / limit) })
 }
 
 async function findOne(req: Request, res: Response) {
@@ -212,9 +218,13 @@ async function findAllByDictado(req: Request, res: Response) {
         return
     }
 
-    const { page, limit } = getSanitizedQuery(req)
+    const { page, limit } = getSanitizedPaginationParams(req)
+    const { horaInicio, horaFin } = getSanitizedDateTimeRangeParams(req)
 
-    const filter = { dictado: new ObjectId(dictado) }
+    const filter: { dictado: ObjectId, horaInicio?: DateFilter, horaFin?: DateFilter } = { dictado: new ObjectId(dictado)}
+    if (horaInicio !== "") filter.horaInicio = { $gte: new Date(horaInicio) }
+    if (horaFin !== "") filter.horaFin = { $lte: new Date(horaFin) }
+
     const consultas = await consultaRepository.findAllByFilter(filter, { page, limit })
     res.json({ data: consultas, total: await consultaRepository.countByFilter(filter), page, totalPages: limit === 0 ? 1 : (consultas.length / limit) })
 }
@@ -226,11 +236,14 @@ async function findAllByDocente(req: Request, res: Response) {
         return
     }
 
-    const { page, limit } = getSanitizedQuery(req)
+    const { page, limit } = getSanitizedPaginationParams(req)
+    const { horaInicio, horaFin } = getSanitizedDateTimeRangeParams(req)
 
-    const filter = { docente: new ObjectId(docente) }
+    const filter: { docente: ObjectId, horaInicio?: DateFilter, horaFin?: DateFilter } = { docente: new ObjectId(docente)}
+    if (horaInicio !== "") filter.horaInicio = { $gte: new Date(horaInicio) }
+    if (horaFin !== "") filter.horaFin = { $lte: new Date(horaFin) }
+
     const consultas = await consultaRepository.findAllByDocente(filter, { page, limit })
-
     res.json({ data: consultas, total: await consultaRepository.countByDocente(filter), page, totalPages: limit === 0 ? 1 : (consultas.length / limit) })
 }
 
@@ -240,87 +253,16 @@ async function findAllByMateria(req: Request, res: Response) {
         res.status(400).send({ message: "El id de materia ingresado no es válido" })
         return
     }
-    
-    const { page, limit } = getSanitizedQuery(req)
 
-    const filter = { materia: new ObjectId(materia) }
+    const { page, limit } = getSanitizedPaginationParams(req)
+    const { horaInicio, horaFin } = getSanitizedDateTimeRangeParams(req)
+
+    const filter: { materia: ObjectId, horaInicio?: DateFilter, horaFin?: DateFilter } = { materia: new ObjectId(materia)}
+    if (horaInicio !== "") filter.horaInicio = { $gte: new Date(horaInicio) }
+    if (horaFin !== "") filter.horaFin = { $lte: new Date(horaFin) }
+
     const consultas = await consultaRepository.findAllByMateria(filter, { page, limit })
     res.json({ data: consultas, total: await consultaRepository.countByMateria(filter), page, totalPages: limit === 0 ? 1 : (consultas.length / limit) })
 }
 
-async function findAllInHorario(req: Request, res: Response) {
-    let horaInicio = req.params.horaInicio
-    let horaFin = req.params.horaFin
-    if (isNaN(Date.parse(horaInicio)) || isNaN(Date.parse(horaFin))) {
-        res.status(400).send({ message: "El rango horario ingresado no es válido" })
-        return
-    }
-    
-    const { page, limit } = getSanitizedQuery(req)
-
-    const filter = { horaInicio: { $ge: new Date(horaInicio) }, horaFin: { $le: new Date(horaFin) } }
-    const consultas = await consultaRepository.findAllByFilter(filter, { page, limit })
-    res.json({ data: consultas, total: await consultaRepository.countByFilter(filter), page, totalPages: limit === 0 ? 1 : (consultas.length / limit) })
-}
-
-async function findAllByDictadoInHorario(req: Request, res: Response) {
-    let dictado = req.params.dictado
-    if (!ObjectId.isValid(dictado)) {
-        res.status(400).send({ message: "El id de dictado ingresado no es válido" })
-        return
-    }
-    let horaInicio = req.params.horaInicio
-    let horaFin = req.params.horaFin
-    if (isNaN(Date.parse(horaInicio)) || isNaN(Date.parse(horaFin))) {
-        res.status(400).send({ message: "El rango horario ingresado no es válido" })
-        return
-    }
-
-    const { page, limit } = getSanitizedQuery(req)
-
-    const filter = { dictado: new ObjectId(dictado), horaInicio: { $ge: new Date(horaInicio) }, horaFin: { $le: new Date(horaFin) } }
-    const consultas = await consultaRepository.findAllByFilter(filter, { page, limit })
-    res.json({ data: consultas, total: await consultaRepository.countByFilter(filter), page, totalPages: limit === 0 ? 1 : (consultas.length / limit) })
-}
-
-async function findAllByDocenteInHorario(req: Request, res: Response) {
-    let docente = req.params.docente
-    if (!ObjectId.isValid(docente)) {
-        res.status(400).send({ message: "El id de docente ingresado no es válido" })
-        return
-    }
-    let horaInicio = req.params.horaInicio
-    let horaFin = req.params.horaFin
-    if (isNaN(Date.parse(horaInicio)) || isNaN(Date.parse(horaFin))) {
-        res.status(400).send({ message: "El rango horario ingresado no es válido" })
-        return
-    }
-
-    const { page, limit } = getSanitizedQuery(req)
-
-    const filter = { docente: new ObjectId(docente), horaInicio: { $ge: new Date(horaInicio) }, horaFin: { $le: new Date(horaFin) } }
-    const consultas = await consultaRepository.findAllByDocente(filter, { page, limit })
-    res.json({ data: consultas, total: await consultaRepository.countByDocente(filter), page, totalPages: limit === 0 ? 1 : (consultas.length / limit) })
-}
-
-async function findAllByMateriaInHorario(req: Request, res: Response) {
-    let materia = req.params.materia
-    if (!ObjectId.isValid(materia)) {
-        res.status(400).send({ message: "El id de materia ingresado no es válido" })
-        return
-    }
-    let horaInicio = req.params.horaInicio
-    let horaFin = req.params.horaFin
-    if (isNaN(Date.parse(horaInicio)) || isNaN(Date.parse(horaFin))) {
-        res.status(400).send({ message: "El rango horario ingresado no es válido" })
-        return
-    }
-
-    const { page, limit } = getSanitizedQuery(req)
-
-    const filter = { materia: new ObjectId(materia), horaInicio: { $ge: new Date(horaInicio) }, horaFin: { $le: new Date(horaFin) } }
-    const consultas = await consultaRepository.findAllByMateria(filter, { page, limit })
-    res.json({ data: consultas, total: await consultaRepository.countByMateria(filter), page, totalPages: limit === 0 ? 1 : (consultas.length / limit) })
-}
-
-export { extractInput, sanitizeInput, findAll, findOne, add, update, remove, findAllByDictado, findAllByDocente, findAllByMateria, findAllInHorario, findAllByDictadoInHorario, findAllByDocenteInHorario, findAllByMateriaInHorario }
+export { extractInput, sanitizeInput, findAll, findOne, add, update, remove, findAllByDictado, findAllByDocente, findAllByMateria }

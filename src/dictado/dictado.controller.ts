@@ -4,7 +4,7 @@ import { Dictado } from "./dictado.entity.js"
 import { ObjectId } from "mongodb"
 import { DocenteRepository } from "../docente/docente.repository.js"
 import { MateriaRepository } from "../materia/materia.repository.js"
-import { getSanitizedQuery } from "../shared/controller.middlewares.js"
+import { getSanitizedPaginationParams } from "../shared/controller.middlewares.js"
 
 const dictadoRepository = new DictadoRepository()
 const docenteRepository = new DocenteRepository()
@@ -94,7 +94,7 @@ function handleError(res: Response, err: any) {
 // ----- Operaciones CRUD comunes -----
 
 async function findAll(req: Request, res: Response) {
-    const { page, limit } = getSanitizedQuery(req)
+    const { page, limit } = getSanitizedPaginationParams(req)
 
     const dictados = await dictadoRepository.findAll({ page, limit })
     res.json({ data: dictados, total: await dictadoRepository.count(), page, totalPages: limit === 0 ? 1 : (dictados.length / limit) })
@@ -151,7 +151,7 @@ async function findAllByDocente(req: Request, res: Response) {
         return
     }
 
-    const { page, limit } = getSanitizedQuery(req)
+    const { page, limit } = getSanitizedPaginationParams(req)
 
     const dictadosByDocente = await dictadoRepository.findAllByFilter({ docente: new ObjectId(docente) }, { page, limit })
     res.json({ data: dictadosByDocente, total: await dictadoRepository.countByFilter({ docente: new ObjectId(docente) }), page, totalPages: limit === 0 ? 1 : (dictadosByDocente.length / limit) })
@@ -164,7 +164,7 @@ async function findAllByMateria(req: Request, res: Response) {
         return
     }
 
-    const { page, limit } = getSanitizedQuery(req)
+    const { page, limit } = getSanitizedPaginationParams(req)
 
     const dictadosByMateria = await dictadoRepository.findAllByFilter({ materia: new ObjectId(materia) }, { page, limit })
     res.json({ data: dictadosByMateria, total: await dictadoRepository.countByFilter({ materia: new ObjectId(materia) }), page, totalPages: limit === 0 ? 1 : (dictadosByMateria.length / limit) })
