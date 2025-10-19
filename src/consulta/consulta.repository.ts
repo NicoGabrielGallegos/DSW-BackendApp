@@ -1,7 +1,7 @@
-import { Repository } from "../shared/repository.js";
+import { addPopulationToPipeline, pagination, populateHas, Repository, sanitizeRangoHorario } from "../shared/repository.js";
 import { Consulta } from "./consulta.entity.js";
 import { db } from "../shared/db/connection.js";
-import { ObjectId, Sort } from "mongodb";
+import { Document, ObjectId, Sort } from "mongodb";
 import { DateFilter } from "../shared/types/DateFilter.js";
 
 const consultas = db.collection<Consulta>("consultas")
@@ -10,20 +10,46 @@ const defaultSort: Sort = { horaInicio: 1, horaFin: 1, dictado: 1 }
 
 export class ConsultaRepository implements Repository<Consulta> {
 
-    private sanitizeRangoHorario(filter: { horaInicio?: DateFilter, horaFin?: DateFilter }): { horaInicio?: DateFilter, horaFin?: DateFilter } {
-        const rangoHorario: { horaInicio?: DateFilter, horaFin?: DateFilter } = {}
-        if (filter.horaInicio) rangoHorario.horaInicio = filter.horaInicio
-        if (filter.horaFin) rangoHorario.horaFin = filter.horaFin
-        return rangoHorario
-    }
+    public async findAll(options: { page: number, limit: number, sort?: Sort, populate?: string[] } = { page: 1, limit: 0 }): Promise<Consulta[]> {
+        // Poblar si es solicitado
+        if (options.populate && options.populate.length !== 0) {
+            const pipeline: Document[] = []
+            // Poblar con dictado
+            if (populateHas(options.populate || [], ["dictado", "docente", "materia"]))
+                addPopulationToPipeline(pipeline, { from: "dictados", field: "dictado" })
+            // Poblar con docente
+            if (options.populate.includes("docente"))
+                addPopulationToPipeline(pipeline, { from: "docentes", field: "dictado.docente" })
+            // Poblar con materia
+            if (options.populate.includes("materia"))
+                addPopulationToPipeline(pipeline, { from: "materias", field: "dictado.materia" })
 
-    public async findAll(options: { page: number, limit: number, sort?: Sort } = { page: 1, limit: 0 }): Promise<Consulta[]> {
+            const cursor = pagination(consultas.aggregate(pipeline).sort(options.sort || defaultSort), options).toArray()
+            return await cursor as Consulta[]
+        }
+
+        // Sino, devolver sin poblar
         return await consultas.find().sort(options.sort || defaultSort).skip((options.page - 1) * options.limit).limit(options.limit).toArray()
     }
 
-    public async findOne(filter: { id: string }): Promise<Consulta | undefined> {
+    public async findOne(filter: { id: string }, options: { populate?: string[] } = {}): Promise<Consulta | undefined> {
         const _id = new ObjectId(filter.id)
-        return await consultas.findOne({ _id }) || undefined
+        const pipeline: Document[] = [{ $match: { _id } }]
+        // Poblar si es solicitado
+        if (options.populate && options.populate.length !== 0) {
+            // Poblar con dictado
+            if (populateHas(options.populate || [], ["dictado", "docente", "materia"]))
+                addPopulationToPipeline(pipeline, { from: "dictados", field: "dictado" })
+            // Poblar con docente
+            if (options.populate.includes("docente"))
+                addPopulationToPipeline(pipeline, { from: "docentes", field: "dictado.docente" })
+            // Poblar con materia
+            if (options.populate.includes("materia"))
+                addPopulationToPipeline(pipeline, { from: "materias", field: "dictado.materia" })
+
+        }
+        pipeline.push({ $limit: 1 })
+        return (await consultas.aggregate(pipeline).toArray())[0] as Consulta || undefined
     }
 
     public async add(item: Consulta): Promise<Consulta | undefined> {
@@ -45,60 +71,65 @@ export class ConsultaRepository implements Repository<Consulta> {
         return await consultas.findOneAndDelete({ _id }) || undefined
     }
 
-    public async findOneByFilter(filter: { dictado?: ObjectId, horaInicio?: DateFilter, horaFin?: DateFilter, estado?: string }): Promise<Consulta | undefined> {
-        return await consultas.findOne(filter) || undefined
-    }
-
     public async findAllByFilter(
         filter: { dictado?: ObjectId, horaInicio?: DateFilter, horaFin?: DateFilter, estado?: string },
-        options: { page: number, limit: number, sort?: Sort } = { page: 1, limit: 0 }
+        options: { page: number, limit: number, sort?: Sort, populate?: string[] } = { page: 1, limit: 0 }
     ): Promise<Consulta[]> {
+        // Poblar si es solicitado
+        if (options.populate && options.populate.length !== 0) {
+            const pipeline: Document[] = []
+            // Poblar con dictado
+            if (populateHas(options.populate || [], ["dictado", "docente", "materia"]))
+                addPopulationToPipeline(pipeline, { from: "dictados", field: "dictado" })
+            // Poblar con docente
+            if (options.populate.includes("docente"))
+                addPopulationToPipeline(pipeline, { from: "docentes", field: "dictado.docente" })
+            // Poblar con materia
+            if (options.populate.includes("materia"))
+                addPopulationToPipeline(pipeline, { from: "materias", field: "dictado.materia" })
+
+            const cursor = pagination(consultas.aggregate([
+                {
+                    $match: filter
+                },
+                ...pipeline
+            ]).sort(options.sort || defaultSort), options).toArray()
+            return await cursor as Consulta[]
+        }
+
+        // Sino, devolver sin poblar
         return await consultas.find(filter).sort(options.sort || defaultSort).skip((options.page - 1) * options.limit).limit(options.limit).toArray()
     }
 
     public async findAllByDocente(
         filter: { docente: ObjectId, horaInicio?: DateFilter, horaFin?: DateFilter },
-        options: { page: number, limit: number, sort?: Sort } = { page: 1, limit: 0 }
+        options: { page: number, limit: number, sort?: Sort, populate?: string[] } = { page: 1, limit: 0 }
     ): Promise<Consulta[]> {
-        const consultasByDocente: Consulta[] = [];
+        const pipeline: Document[] = [{ $match: sanitizeRangoHorario(filter) }]
+        // Poblar con dictado siempre para filtrar por docente
+        addPopulationToPipeline(pipeline, { from: "dictados", field: "dictado" })
+        pipeline.push({ $match: { "dictado.docente": filter.docente } })
+        // Poblar si es solicitado
+        if (options.populate && populateHas(options.populate || [], ["dictado", "docente", "materia"])) {
+            // Poblar con docente
+            if (options.populate.includes("docente"))
+                addPopulationToPipeline(pipeline, { from: "docentes", field: "dictado.docente" })
+            // Poblar con materia
+            if (options.populate.includes("materia"))
+                addPopulationToPipeline(pipeline, { from: "materias", field: "dictado.materia" })
 
-        const cursor = consultas.aggregate([
-            {
-                $match: this.sanitizeRangoHorario(filter)
-            },
-            {
-                $lookup: {
-                    from: "dictados",
-                    localField: "dictado",
-                    foreignField: "_id",
-                    as: "dictado",
-                    pipeline: [
-                        {
-                            $project: {
-                                docente: 1
-                            }
-                        }
-                    ]
-                }
-            },
-            {
-                $match: {
-                    dictado: { $elemMatch: { docente: filter.docente } }
-                }
-            },
-        ]).sort(options.sort || defaultSort)
-
-        // Aplicar filtros de paginación solo si el límite es positivo
-        if (options.limit > 0) {
-            // Aplicar skip solo si la página es válida
-            if (options.page > 1) {
-                cursor.skip((options.page - 1) * options.limit)
-            }
-            cursor.limit(options.limit)
+            const cursor = pagination(consultas.aggregate(
+                pipeline
+            ).sort(options.sort || defaultSort), options).toArray()
+            return await cursor as Consulta[]
         }
 
-        (await cursor.toArray()).forEach((consulta) => {
-            consultasByDocente.push({ _id: consulta._id, dictado: consulta.dictado[0]._id, horaInicio: consulta.horaInicio, horaFin: consulta.horaFin, estado: consulta.estado })
+        let consultasByDocente: Consulta[] = [];
+
+        (await pagination(consultas.aggregate(
+            pipeline
+        ).sort(options.sort || defaultSort), options).toArray()).forEach((consulta) => {
+            consultasByDocente.push({ _id: consulta._id, dictado: consulta.dictado._id, horaInicio: consulta.horaInicio, horaFin: consulta.horaFin, estado: consulta.estado })
         });
 
         return consultasByDocente
@@ -106,49 +137,36 @@ export class ConsultaRepository implements Repository<Consulta> {
 
     public async findAllByMateria(
         filter: { materia: ObjectId, horaInicio?: DateFilter, horaFin?: DateFilter },
-        options: { page: number, limit: number, sort?: Sort } = { page: 1, limit: 0 }
+        options: { page: number, limit: number, sort?: Sort, populate?: string[] } = { page: 1, limit: 0 }
     ): Promise<Consulta[]> {
-        const consultasByMateria: Consulta[] = [];
-        const cursor = consultas.aggregate([
-            {
-                $match: this.sanitizeRangoHorario(filter)
-            },
-            {
-                $lookup: {
-                    from: "dictados",
-                    localField: "dictado",
-                    foreignField: "_id",
-                    as: "dictado",
-                    pipeline: [
-                        {
-                            $project: {
-                                materia: 1
-                            }
-                        }
-                    ]
-                }
-            },
-            {
-                $match: {
-                    dictado: { $elemMatch: { materia: filter.materia } }
-                }
-            },
-        ]).sort(options.sort || defaultSort)
+        const pipeline: Document[] = [{ $match: sanitizeRangoHorario(filter) }]
+        // Poblar con dictado siempre para filtrar por docente
+        addPopulationToPipeline(pipeline, { from: "dictados", field: "dictado" })
+        pipeline.push({ $match: { "dictado.materia": filter.materia } })
+        // Poblar si es solicitado
+        if (options.populate && populateHas(options.populate || [], ["dictado", "docente", "materia"])) {
+            // Poblar con docente
+            if (options.populate.includes("docente"))
+                addPopulationToPipeline(pipeline, { from: "docentes", field: "dictado.docente" })
+            // Poblar con materia
+            if (options.populate.includes("materia"))
+                addPopulationToPipeline(pipeline, { from: "materias", field: "dictado.materia" })
 
-        // Aplicar filtros de paginación solo si el límite es positivo
-        if (options.limit > 0) {
-            // Aplicar skip solo si la página es válida
-            if (options.page > 1) {
-                cursor.skip((options.page - 1) * options.limit)
-            }
-            cursor.limit(options.limit)
+            const cursor = pagination(consultas.aggregate(
+                pipeline
+            ).sort(options.sort || defaultSort), options).toArray()
+            return await cursor as Consulta[]
         }
 
-        (await cursor.toArray()).forEach((consulta) => {
-            consultasByMateria.push({ _id: consulta._id, dictado: consulta.dictado[0]._id, horaInicio: consulta.horaInicio, horaFin: consulta.horaFin, estado: consulta.estado })
+        let consultasByDocente: Consulta[] = [];
+
+        (await pagination(consultas.aggregate(
+            pipeline
+        ).sort(options.sort || defaultSort), options).toArray()).forEach((consulta) => {
+            consultasByDocente.push({ _id: consulta._id, dictado: consulta.dictado._id, horaInicio: consulta.horaInicio, horaFin: consulta.horaFin, estado: consulta.estado })
         });
 
-        return consultasByMateria
+        return consultasByDocente
     }
 
     public async count(): Promise<number> {
@@ -162,7 +180,7 @@ export class ConsultaRepository implements Repository<Consulta> {
     public async countByDocente(filter: { docente: ObjectId, horaInicio?: DateFilter, horaFin?: DateFilter }): Promise<number> {
         return (await consultas.aggregate([
             {
-                $match: this.sanitizeRangoHorario(filter)
+                $match: sanitizeRangoHorario(filter)
             },
             {
                 $lookup: {
@@ -186,7 +204,7 @@ export class ConsultaRepository implements Repository<Consulta> {
     public async countByMateria(filter: { materia: ObjectId, horaInicio?: DateFilter, horaFin?: DateFilter }): Promise<number> {
         return (await consultas.aggregate([
             {
-                $match: this.sanitizeRangoHorario(filter)
+                $match: sanitizeRangoHorario(filter)
             },
             {
                 $lookup: {

@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { add, findAll, findOne, update, remove, extractInput, sanitizeInput, findAllByAlumno, findAllByConsulta } from "./inscripcion.controller.js";
-import { assureCompleteInput } from "../shared/controller.middlewares.js";
+import { assureCompleteInput } from "../shared/controller.js";
 
 export const inscripcionRouter = Router()
 

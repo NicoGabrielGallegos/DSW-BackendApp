@@ -48,3 +48,9 @@ export function getSanitizedDateTimeRangeParams(req: Request) {
         horaFin: isNaN(Date.parse(horaFin)) ? "" : horaFin
     }
 }
+
+export function getPopulateParams(req: Request) {
+    let populate: string[] = req.query.populate?.toString().split(",") || []
+
+    return { populate }
+}

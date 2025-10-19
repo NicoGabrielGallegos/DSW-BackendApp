@@ -3,7 +3,7 @@ import { MateriaRepository } from "./materia.repository.js"
 import { Materia } from "./materia.entity.js"
 import { ObjectId } from "mongodb"
 import { DictadoRepository } from "../dictado/dictado.repository.js"
-import { getSanitizedPaginationParams } from "../shared/controller.middlewares.js"
+import { getSanitizedPaginationParams } from "../shared/controller.js"
 
 const materiaRepository = new MateriaRepository()
 const dictadoRepository = new DictadoRepository()

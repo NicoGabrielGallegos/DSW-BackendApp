@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { add, findAll, findOne, update, remove, sanitizeInput, findAllByDictado, extractInput, findAllByDocente, findAllByMateria } from "./consulta.controller.js";
-import { assureCompleteInput } from "../shared/controller.middlewares.js";
+import { assureCompleteInput } from "../shared/controller.js";
 
 export const consultaRouter = Router()
 

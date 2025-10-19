@@ -5,7 +5,7 @@ import { ObjectId } from "mongodb"
 import { AlumnoRepository } from "../alumno/alumno.repository.js"
 import { ConsultaRepository } from "../consulta/consulta.repository.js"
 import { EstadoConsulta } from "../consulta/consulta.entity.js"
-import { getSanitizedDateTimeRangeParams, getSanitizedPaginationParams } from "../shared/controller.middlewares.js"
+import { getPopulateParams, getSanitizedDateTimeRangeParams, getSanitizedPaginationParams } from "../shared/controller.js"
 import { DateFilter } from "../shared/types/DateFilter.js"
 
 const inscripcionRepository = new InscripcionRepository()
@@ -116,12 +116,13 @@ function handleError(res: Response, err: any) {
 async function findAll(req: Request, res: Response) {
     const { page, limit } = getSanitizedPaginationParams(req)
     const { horaInicio, horaFin } = getSanitizedDateTimeRangeParams(req)
+    const { populate } = getPopulateParams(req)
 
     const filter: { horaInicio?: DateFilter, horaFin?: DateFilter } = {}
     if (horaInicio !== "") filter.horaInicio = { $gte: new Date(horaInicio) }
     if (horaFin !== "") filter.horaFin = { $lte: new Date(horaFin) }
 
-    const inscripciones = await inscripcionRepository.findAllByFilterWithHorario(filter, { page, limit })
+    const inscripciones = await inscripcionRepository.findAllByFilterWithHorario(filter, { page, limit, populate })
     const total = await inscripcionRepository.countByFilterWithHorario(filter)
     res.json({ data: inscripciones, total, page, limit })
 }

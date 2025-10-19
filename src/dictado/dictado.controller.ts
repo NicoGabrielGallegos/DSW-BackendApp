@@ -4,7 +4,7 @@ import { Dictado } from "./dictado.entity.js"
 import { ObjectId } from "mongodb"
 import { DocenteRepository } from "../docente/docente.repository.js"
 import { MateriaRepository } from "../materia/materia.repository.js"
-import { getSanitizedPaginationParams } from "../shared/controller.middlewares.js"
+import { getSanitizedPaginationParams } from "../shared/controller.js"
 
 const dictadoRepository = new DictadoRepository()
 const docenteRepository = new DocenteRepository()

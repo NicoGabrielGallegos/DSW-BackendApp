@@ -7,7 +7,7 @@ import { ObjectId } from "mongodb"
 import { InscripcionRepository } from "../inscripcion/inscripcion.repository.js"
 import jwk from 'jsonwebtoken'
 import { PRIVATE_KEY } from "../shared/auth/auth.controller.js"
-import { getSanitizedPaginationParams } from "../shared/controller.middlewares.js"
+import { getSanitizedPaginationParams } from "../shared/controller.js"
 
 const alumnoRepository = new AlumnoRepository()
 const inscripcionRepository = new InscripcionRepository()

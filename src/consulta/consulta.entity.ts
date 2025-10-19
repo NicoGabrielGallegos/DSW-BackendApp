@@ -1,4 +1,5 @@
 import { ObjectId } from "mongodb";
+import { Dictado } from "../dictado/dictado.entity.js";
 
 export enum EstadoConsulta {
     Programada = "Programada",
@@ -8,7 +9,7 @@ export enum EstadoConsulta {
 
 export class Consulta {
     constructor(
-        public dictado: ObjectId,
+        public dictado: ObjectId | Dictado,
         public horaInicio: Date,
         public horaFin: Date,
         public estado: string,

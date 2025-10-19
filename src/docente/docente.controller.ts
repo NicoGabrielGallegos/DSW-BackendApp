@@ -5,7 +5,7 @@ import { isValidEmail } from "../shared/validations.js";
 import { hash } from "bcryptjs";
 import { ObjectId } from "mongodb";
 import { DictadoRepository } from "../dictado/dictado.repository.js";
-import { getSanitizedPaginationParams } from "../shared/controller.middlewares.js";
+import { getSanitizedPaginationParams } from "../shared/controller.js";
 
 const docenteRepository = new DocenteRepository()
 const dictadoRepository = new DictadoRepository()
