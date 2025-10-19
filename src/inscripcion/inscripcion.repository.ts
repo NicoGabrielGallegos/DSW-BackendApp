@@ -21,6 +21,9 @@ export class InscripcionRepository implements Repository<Inscripcion> {
         // Poblar si es solicitado
         if (options.populate && options.populate.length !== 0) {
             const pipeline: Document[] = []
+            // Poblar con alumno
+            if (options.populate.includes("alumno"))
+                addPopulationToPipeline(pipeline, { from: "alumnos", field: "alumno" })
             // Poblar con consulta
             if (populateHas(options.populate || [], ["consulta", "dictado", "docente", "materia"]))
                 addPopulationToPipeline(pipeline, { from: "consultas", field: "consulta" })
@@ -33,9 +36,6 @@ export class InscripcionRepository implements Repository<Inscripcion> {
             // Poblar con materia
             if (options.populate.includes("materia"))
                 addPopulationToPipeline(pipeline, { from: "materias", field: "consulta.dictado.materia" })
-            // Poblar con alumno
-            if (options.populate.includes("materia"))
-                addPopulationToPipeline(pipeline, { from: "alumnos", field: "alumno" })
 
             const cursor = pagination(inscripciones.aggregate(pipeline).sort(options.sort || defaultSort), options).toArray()
             return await cursor as Inscripcion[]
@@ -49,7 +49,10 @@ export class InscripcionRepository implements Repository<Inscripcion> {
         const pipeline: Document[] = [{ $match: { _id } }]
         // Poblar si es solicitado
         if (options.populate && options.populate.length !== 0) {
-            // Poblar con dictado
+            // Poblar con alumno
+            if (options.populate.includes("alumno"))
+                addPopulationToPipeline(pipeline, { from: "alumnos", field: "alumno" })
+            // Poblar con consulta
             if (populateHas(options.populate || [], ["consulta", "dictado", "docente", "materia"]))
                 addPopulationToPipeline(pipeline, { from: "consultas", field: "consulta" })
             // Poblar con dictado
@@ -66,23 +69,25 @@ export class InscripcionRepository implements Repository<Inscripcion> {
         return (await inscripciones.aggregate(pipeline).toArray())[0] as Inscripcion || undefined
     }
 
-    public async add(item: Inscripcion): Promise<Inscripcion | undefined> {
+    public async add(item: Inscripcion, options: { populate?: string[] } = {}): Promise<Inscripcion | undefined> {
         item._id = (await inscripciones.insertOne(item)).insertedId
-        return item
+        return await this.findOne({id: item._id.toString()}, options)
     }
 
-    public async update(filter: { id: string }, item: Inscripcion): Promise<Inscripcion | undefined> {
+    public async update(filter: { id: string }, item: Inscripcion, options: { populate?: string[] } = {}): Promise<Inscripcion | undefined> {
+        const inscripcion = await this.findOne(filter, options)
+        if (!inscripcion) return undefined
         const _id = new ObjectId(filter.id)
-        return (
-            await inscripciones.findOneAndUpdate({ _id },
-                { $set: item },
-                { returnDocument: "after" })
-        ) || undefined
+        await inscripciones.updateOne({ _id }, { $set: item })
+        return inscripcion
     }
 
-    public async delete(filter: { id: string }): Promise<Inscripcion | undefined> {
+    public async delete(filter: { id: string }, options: { populate?: string[] } = {}): Promise<Inscripcion | undefined> {
+        const inscripcion = await this.findOne(filter, options)
+        if (!inscripcion) return undefined
         const _id = new ObjectId(filter.id)
-        return await inscripciones.findOneAndDelete({ _id }) || undefined
+        await inscripciones.deleteOne({ _id })
+        return inscripcion
     }
 
     public async findOneByFilter(filter: { alumno?: ObjectId, consulta?: ObjectId }): Promise<Inscripcion | undefined> {
@@ -166,7 +171,7 @@ export class InscripcionRepository implements Repository<Inscripcion> {
         return inscripcionesByFilterWithHorario
     }
 
-    public async deleteByAlumno(filter: { alumno: ObjectId }): Promise<void> {
+    public async deleteByAlumno(filter: { alumno: ObjectId }, options: { populate?: string[] } = {}): Promise<void> {
         await inscripciones.deleteMany(filter)
     }
 

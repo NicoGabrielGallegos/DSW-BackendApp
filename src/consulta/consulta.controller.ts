@@ -169,7 +169,8 @@ async function add(req: Request, res: Response) {
 
     const consultaInput = new Consulta(dictado, horaInicio, horaFin, estado)
     try {
-        const consulta = await consultaRepository.add(consultaInput)
+        const { populate } = getPopulateParams(req)
+        const consulta = await consultaRepository.add(consultaInput, { populate })
         res.status(201).send({ message: "Consulta creada con éxito", data: consulta })
     } catch (err: any) {
         handleError(res, err)
@@ -201,7 +202,8 @@ async function update(req: Request, res: Response) {
     }
 
     try {
-        const consulta = await consultaRepository.update({ id: req.params.id }, req.body.sanitizedInput)
+        const { populate } = getPopulateParams(req)
+        const consulta = await consultaRepository.update({ id: req.params.id }, req.body.sanitizedInput, { populate })
         if (!consulta) {
             res.status(404).send({ message: "Consulta no encontrada" })
             return
@@ -213,7 +215,8 @@ async function update(req: Request, res: Response) {
 }
 
 async function remove(req: Request, res: Response) {
-    const consulta = await consultaRepository.delete({ id: req.params.id })
+    const { populate } = getPopulateParams(req)
+    const consulta = await consultaRepository.delete({ id: req.params.id }, { populate })
     if (!consulta) {
         res.status(404).send({ message: "Consulta no encontrada" })
         return

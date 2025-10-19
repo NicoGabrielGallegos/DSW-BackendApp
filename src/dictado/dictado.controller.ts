@@ -115,7 +115,8 @@ async function add(req: Request, res: Response) {
     const { docente, materia } = req.body.sanitizedInput
     const dictadoInput = new Dictado(docente, materia)
     try {
-        const dictado = await dictadoRepository.add(dictadoInput)
+        const { populate } = getPopulateParams(req)
+        const dictado = await dictadoRepository.add(dictadoInput, { populate })
         res.status(201).send({ message: "Dictado creado con éxito", data: dictado })
     } catch (err: any) {
         handleError(res, err)
@@ -124,7 +125,8 @@ async function add(req: Request, res: Response) {
 
 async function update(req: Request, res: Response) {
     try {
-        const dictado = await dictadoRepository.update({ id: req.params.id }, req.body.sanitizedInput)
+        const { populate } = getPopulateParams(req)
+        const dictado = await dictadoRepository.update({ id: req.params.id }, req.body.sanitizedInput, { populate })
         if (!dictado) {
             res.status(404).send({ message: "Dictado no encontrado" })
             return
@@ -136,7 +138,8 @@ async function update(req: Request, res: Response) {
 }
 
 async function remove(req: Request, res: Response) {
-    const dictado = await dictadoRepository.delete({ id: req.params.id })
+    const { populate } = getPopulateParams(req)
+    const dictado = await dictadoRepository.delete({ id: req.params.id }, { populate })
     if (!dictado) {
         res.status(404).send({ message: "Dictado no encontrado" })
         return
@@ -190,7 +193,7 @@ async function findOneByDocenteAndMateria(req: Request, res: Response) {
         return
     }
 
-    res.json({data: await dictadoRepository.findOneByFilter({docente: new ObjectId(docente), materia: new ObjectId(materia)})})
+    res.json({ data: await dictadoRepository.findOneByFilter({ docente: new ObjectId(docente), materia: new ObjectId(materia) }) })
 }
 
 export { extractInput, sanitizeInput, findAll, findOne, add, update, remove, findAllByDocente, findAllByMateria, findOneByDocenteAndMateria }

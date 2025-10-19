@@ -140,7 +140,8 @@ async function add(req: Request, res: Response) {
     const { alumno, consulta } = req.body.sanitizedInput
     const inscripcionInput = new Inscripcion(alumno, consulta)
     try {
-        const inscripcion = await inscripcionRepository.add(inscripcionInput)
+        const { populate } = getPopulateParams(req)
+        const inscripcion = await inscripcionRepository.add(inscripcionInput, { populate })
         res.status(201).send({ message: "Inscripcion creada con éxito", data: inscripcion })
     } catch (err: any) {
         handleError(res, err)
@@ -149,7 +150,8 @@ async function add(req: Request, res: Response) {
 
 async function update(req: Request, res: Response) {
     try {
-        const inscripcion = await inscripcionRepository.update({ id: req.params.id }, req.body.sanitizedInput)
+        const { populate } = getPopulateParams(req)
+        const inscripcion = await inscripcionRepository.update({ id: req.params.id }, req.body.sanitizedInput, { populate })
         if (!inscripcion) {
             res.status(404).send({ message: "Inscripcion no encontrada" })
             return
@@ -161,7 +163,8 @@ async function update(req: Request, res: Response) {
 }
 
 async function remove(req: Request, res: Response) {
-    const inscripcion = await inscripcionRepository.delete({ id: req.params.id })
+    const { populate } = getPopulateParams(req)
+    const inscripcion = await inscripcionRepository.delete({ id: req.params.id }, { populate })
     if (!inscripcion) {
         res.status(404).send({ message: "Inscripcion no encontrada" })
         return
@@ -198,7 +201,7 @@ async function findAllByConsulta(req: Request, res: Response) {
     }
 
     const { page, limit } = getSanitizedPaginationParams(req)
-    const filter = {consulta: new ObjectId(consulta)}
+    const filter = { consulta: new ObjectId(consulta) }
 
     const inscripciones = await inscripcionRepository.findAllByFilter(filter)
     const total = await inscripcionRepository.countByFilter(filter)

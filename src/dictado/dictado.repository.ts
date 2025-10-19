@@ -45,23 +45,25 @@ export class DictadoRepository implements Repository<Dictado> {
         return (await dictados.aggregate(pipeline).toArray())[0] as Dictado || undefined
     }
 
-    public async add(item: Dictado): Promise<Dictado | undefined> {
+    public async add(item: Dictado, options: { populate?: string[] } = {}): Promise<Dictado | undefined> {
         item._id = (await dictados.insertOne(item)).insertedId
-        return item
+        return await this.findOne({ id: item._id.toString() }, options)
     }
 
-    public async update(filter: { id: string }, item: Dictado): Promise<Dictado | undefined> {
+    public async update(filter: { id: string }, item: Dictado, options: { populate?: string[] } = {}): Promise<Dictado | undefined> {
+        const dictado = await this.findOne(filter, options)
+        if (!dictado) return undefined
         const _id = new ObjectId(filter.id)
-        return (
-            await dictados.findOneAndUpdate({ _id },
-                { $set: item },
-                { returnDocument: "after" })
-        ) || undefined
+        await dictados.updateOne({ _id }, { $set: item })
+        return dictado
     }
 
-    public async delete(filter: { id: string }): Promise<Dictado | undefined> {
+    public async delete(filter: { id: string }, options: { populate?: string[] } = {}): Promise<Dictado | undefined> {
+        const dictado = await this.findOne(filter, options)
+        if (!dictado) return undefined
         const _id = new ObjectId(filter.id)
-        return await dictados.findOneAndDelete({ _id }) || undefined
+        await dictados.deleteOne({ _id })
+        return dictado
     }
 
     public async findOneByFilter(filter: { docente?: ObjectId, materia?: ObjectId }, options: { populate?: string[] } = {}): Promise<Dictado | undefined> {
@@ -86,7 +88,7 @@ export class DictadoRepository implements Repository<Dictado> {
     ): Promise<Dictado[]> {
         // Poblar si es solicitado
         if (options.populate && options.populate.length !== 0) {
-            const pipeline: Document[] = [{$match: filter}]
+            const pipeline: Document[] = [{ $match: filter }]
             // Poblar con docente
             if (options.populate.includes("docente"))
                 addPopulationToPipeline(pipeline, { from: "docentes", field: "docente" })

@@ -52,23 +52,25 @@ export class ConsultaRepository implements Repository<Consulta> {
         return (await consultas.aggregate(pipeline).toArray())[0] as Consulta || undefined
     }
 
-    public async add(item: Consulta): Promise<Consulta | undefined> {
+    public async add(item: Consulta, options: { populate?: string[] } = {}): Promise<Consulta | undefined> {
         item._id = (await consultas.insertOne(item)).insertedId
-        return item
+        return await this.findOne({ id: item._id.toString() }, options)
     }
 
-    public async update(filter: { id: string }, item: Consulta): Promise<Consulta | undefined> {
+    public async update(filter: { id: string }, item: Consulta, options: { populate?: string[] } = {}): Promise<Consulta | undefined> {
+        const consulta = await this.findOne(filter, options)
+        if (!consulta) return undefined
         const _id = new ObjectId(filter.id)
-        return (
-            await consultas.findOneAndUpdate({ _id },
-                { $set: item },
-                { returnDocument: "after" })
-        ) || undefined
+        await consultas.updateOne({ _id }, { $set: item })
+        return consulta
     }
 
-    public async delete(filter: { id: string }): Promise<Consulta | undefined> {
+    public async delete(filter: { id: string }, options: { populate?: string[] } = {}): Promise<Consulta | undefined> {
+        const consulta = await this.findOne(filter, options)
+        if (!consulta) return undefined
         const _id = new ObjectId(filter.id)
-        return await consultas.findOneAndDelete({ _id }) || undefined
+        await consultas.deleteOne({ _id })
+        return consulta
     }
 
     public async findAllByFilter(
