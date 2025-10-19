@@ -232,12 +232,13 @@ async function findAllByDictado(req: Request, res: Response) {
 
     const { page, limit } = getSanitizedPaginationParams(req)
     const { horaInicio, horaFin } = getSanitizedDateTimeRangeParams(req)
+    const { populate } = getPopulateParams(req)
 
     const filter: { dictado: ObjectId, horaInicio?: DateFilter, horaFin?: DateFilter } = { dictado: new ObjectId(dictado) }
     if (horaInicio !== "") filter.horaInicio = { $gte: new Date(horaInicio) }
     if (horaFin !== "") filter.horaFin = { $lte: new Date(horaFin) }
 
-    const consultas = await consultaRepository.findAllByFilter(filter, { page, limit })
+    const consultas = await consultaRepository.findAllByFilter(filter, { page, limit, populate })
     const total = await consultaRepository.countByFilter(filter)
     res.json({ data: consultas, total, page, limit })
 }

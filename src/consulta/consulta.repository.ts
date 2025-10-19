@@ -77,7 +77,7 @@ export class ConsultaRepository implements Repository<Consulta> {
     ): Promise<Consulta[]> {
         // Poblar si es solicitado
         if (options.populate && options.populate.length !== 0) {
-            const pipeline: Document[] = []
+            const pipeline: Document[] = [{ $match: filter }]
             // Poblar con dictado
             if (populateHas(options.populate || [], ["dictado", "docente", "materia"]))
                 addPopulationToPipeline(pipeline, { from: "dictados", field: "dictado" })
@@ -88,12 +88,7 @@ export class ConsultaRepository implements Repository<Consulta> {
             if (options.populate.includes("materia"))
                 addPopulationToPipeline(pipeline, { from: "materias", field: "dictado.materia" })
 
-            const cursor = pagination(consultas.aggregate([
-                {
-                    $match: filter
-                },
-                ...pipeline
-            ]).sort(options.sort || defaultSort), options).toArray()
+            const cursor = pagination(consultas.aggregate(pipeline).sort(options.sort || defaultSort), options).toArray()
             return await cursor as Consulta[]
         }
 

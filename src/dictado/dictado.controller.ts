@@ -4,7 +4,7 @@ import { Dictado } from "./dictado.entity.js"
 import { ObjectId } from "mongodb"
 import { DocenteRepository } from "../docente/docente.repository.js"
 import { MateriaRepository } from "../materia/materia.repository.js"
-import { getSanitizedPaginationParams } from "../shared/controller.js"
+import { getPopulateParams, getSanitizedPaginationParams } from "../shared/controller.js"
 
 const dictadoRepository = new DictadoRepository()
 const docenteRepository = new DocenteRepository()
@@ -95,8 +95,9 @@ function handleError(res: Response, err: any) {
 
 async function findAll(req: Request, res: Response) {
     const { page, limit } = getSanitizedPaginationParams(req)
+    const { populate } = getPopulateParams(req)
 
-    const dictados = await dictadoRepository.findAll({ page, limit })
+    const dictados = await dictadoRepository.findAll({ page, limit, populate })
     const total = await dictadoRepository.count()
     res.json({ data: dictados, total, page, limit })
 }
@@ -154,8 +155,9 @@ async function findAllByDocente(req: Request, res: Response) {
 
     const { page, limit } = getSanitizedPaginationParams(req)
     const filter = { docente: new ObjectId(docente) }
+    const { populate } = getPopulateParams(req)
 
-    const dictadosByDocente = await dictadoRepository.findAllByFilter(filter, { page, limit })
+    const dictadosByDocente = await dictadoRepository.findAllByFilter(filter, { page, limit, populate })
     const total = await dictadoRepository.countByFilter(filter)
     res.json({ data: dictadosByDocente, total, page, limit })
 }
@@ -169,8 +171,9 @@ async function findAllByMateria(req: Request, res: Response) {
 
     const { page, limit } = getSanitizedPaginationParams(req)
     const filter = { materia: new ObjectId(materia) }
+    const { populate } = getPopulateParams(req)
 
-    const dictadosByMateria = await dictadoRepository.findAllByFilter(filter, { page, limit })
+    const dictadosByMateria = await dictadoRepository.findAllByFilter(filter, { page, limit, populate })
     const total = await dictadoRepository.countByFilter(filter)
     res.json({ data: dictadosByMateria, total, page, limit })
 }
@@ -181,7 +184,7 @@ async function findOneByDocenteAndMateria(req: Request, res: Response) {
         res.status(400).send({ message: "El id de docente ingresado no es válido" })
         return
     }
-    let materia = req.params.docente
+    let materia = req.params.materia
     if (!ObjectId.isValid(materia)) {
         res.status(400).send({ message: "El id de materia ingresado no es válido" })
         return
