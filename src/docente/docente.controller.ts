@@ -78,7 +78,8 @@ async function findAll(req: Request, res: Response) {
     const { page, limit } = getSanitizedPaginationParams(req)
 
     const docentes = await docenteRepository.findAll({ page, limit })
-    res.json({ data: docentes, total: await docenteRepository.count(), page, totalPages: limit === 0 ? 1 : (docentes.length / limit) })
+    const total = await docenteRepository.count()
+    res.json({ data: docentes, total, page, limit })
 }
 
 async function findOne(req: Request, res: Response) {
@@ -145,9 +146,11 @@ async function findAllByMateria(req: Request, res: Response) {
     }
 
     const { page, limit } = getSanitizedPaginationParams(req)
+    const filter = { materia: new ObjectId(materia) }
 
-    const docentesByMateria = await docenteRepository.findAllByMateria({ materia: new ObjectId(materia) }, { page, limit })
-    res.json({ data: docentesByMateria, total: await docenteRepository.countByMateria({ materia: new ObjectId(materia) }), page, totalPages: limit === 0 ? 1 : (docentesByMateria.length / limit) })
+    const docentesByMateria = await docenteRepository.findAllByMateria(filter, { page, limit })
+    const total = await docenteRepository.countByMateria(filter)
+    res.json({ data: docentesByMateria, total, page, limit })
 }
 
 export { extractInput, sanitizeInput, findAll, findOne, add, update, remove, findOneByCorreo, findAllByMateria }

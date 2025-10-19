@@ -7,6 +7,7 @@ import { ObjectId } from "mongodb"
 import { InscripcionRepository } from "../inscripcion/inscripcion.repository.js"
 import jwk from 'jsonwebtoken'
 import { PRIVATE_KEY } from "../shared/auth/auth.controller.js"
+import { getSanitizedPaginationParams } from "../shared/controller.middlewares.js"
 
 const alumnoRepository = new AlumnoRepository()
 const inscripcionRepository = new InscripcionRepository()
@@ -80,8 +81,12 @@ function handleError(res: Response, err: any) {
 
 // ----- Operaciones CRUD comunes -----
 
-async function findAll(_req: Request, res: Response) {
-    res.json({ data: await alumnoRepository.findAll() })
+async function findAll(req: Request, res: Response) {
+    const { page, limit } = getSanitizedPaginationParams(req)
+
+    const alumnos = await alumnoRepository.findAll()
+    const total = await alumnoRepository.count()
+    res.json({ data: alumnos, total, page, limit })
 }
 
 async function findOne(req: Request, res: Response) {
@@ -112,7 +117,6 @@ async function update(req: Request, res: Response) {
             return
         }
         res.status(201).send({ message: "Alumno modificado con éxito", data: alumno })
-
     } catch (err) {
         handleError(res, err)
     }
@@ -124,9 +128,7 @@ async function remove(req: Request, res: Response) {
         res.status(404).send({ message: "Alumno no encontrado" })
         return
     }
-
     await inscripcionRepository.deleteByAlumno({ alumno: alumno._id })
-
     res.status(200).send({ message: "Alumno borrado con éxito", data: alumno })
 }
 
@@ -147,7 +149,12 @@ async function findAllByConsulta(req: Request, res: Response) {
         res.status(400).send({ message: "El id de consulta ingresado no es válido" })
         return
     }
-    res.json({ data: await alumnoRepository.findAllByConsulta({ consulta: new ObjectId(consulta) }) })
+    const { page, limit } = getSanitizedPaginationParams(req)
+    const filter = { consulta: new ObjectId(consulta) }
+
+    const alumnos = await alumnoRepository.findAllByConsulta(filter, {page, limit})
+    const total = await alumnoRepository.countByConsulta(filter)
+    res.json({ data: alumnos, total, page, limit })
 }
 
 // ----- Login -----
@@ -183,7 +190,7 @@ async function login(req: Request, res: Response) {
         rol: "alumno"
     }
 
-    const token = jwk.sign({user: payload}, PRIVATE_KEY, { expiresIn: "1h" })
+    const token = jwk.sign({ user: payload }, PRIVATE_KEY, { expiresIn: "1h" })
 
     res.json({ data: token })
 }

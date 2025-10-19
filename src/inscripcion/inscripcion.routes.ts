@@ -1,5 +1,5 @@
 import { Router } from "express";
-import { add, findAll, findOne, update, remove, extractInput, sanitizeInput, findAllByAlumno, findAllByConsulta, findAllByAlumnoInHorario } from "./inscripcion.controller.js";
+import { add, findAll, findOne, update, remove, extractInput, sanitizeInput, findAllByAlumno, findAllByConsulta } from "./inscripcion.controller.js";
 import { assureCompleteInput } from "../shared/controller.middlewares.js";
 
 export const inscripcionRouter = Router()
@@ -15,4 +15,3 @@ inscripcionRouter.delete("/:id", remove)
 // Rutas adicionales
 inscripcionRouter.get("/byAlumno/:alumno", findAllByAlumno)
 inscripcionRouter.get("/byConsulta/:consulta", findAllByConsulta)
-inscripcionRouter.get("/byAlumno/:alumno/inHorario/:horaInicio/:horaFin", findAllByAlumnoInHorario)

@@ -39,7 +39,7 @@ async function sanitizeInput(req: Request, res: Response, next: NextFunction) {
         }
         req.body.sanitizedInput.dictado = ObjectId.createFromHexString(dictado)
         // Guardar el docente para realizar una validación luego
-        req.body.sanitizedInput.docente = dictadoRecuperado.docente
+        req.body.additionalInfo = { docente: dictadoRecuperado.docente }
     }
 
     // Validar hora de inicio
@@ -136,7 +136,8 @@ async function findAll(req: Request, res: Response) {
     if (horaFin !== "") filter.horaFin = { $lte: new Date(horaFin) }
 
     const consultas = await consultaRepository.findAllByFilter(filter, { page, limit })
-    res.json({ data: consultas, total: await consultaRepository.countByFilter(filter), page, totalPages: limit === 0 ? 1 : (consultas.length / limit) })
+    const total = await consultaRepository.countByFilter(filter)
+    res.json({ data: consultas, total, page, limit })
 }
 
 async function findOne(req: Request, res: Response) {
@@ -149,7 +150,8 @@ async function findOne(req: Request, res: Response) {
 }
 
 async function add(req: Request, res: Response) {
-    const { dictado, horaInicio, horaFin, estado, docente } = req.body.sanitizedInput
+    const { dictado, horaInicio, horaFin, estado } = req.body.sanitizedInput
+    const { docente } = req.body.additionalInfo
 
     // Asegurar que la consulta no se superponga a otra del mismo docente
     if ((await consultaRepository.findAllByDocente({ docente, horaInicio: { $lt: horaFin }, horaFin: { $gt: horaInicio } })).length !== 0) {
@@ -181,6 +183,13 @@ async function update(req: Request, res: Response) {
 
     let nuevaHoraInicio = req.body.sanitizedInput.horaInicio ?? consultaRecuperada.horaInicio
     let nuevaHoraFin = req.body.sanitizedInput.horaFin ?? consultaRecuperada.horaFin
+    const { docente } = req.body.additionalInfo
+
+    // Asegurar que la consulta no se superponga a otra del mismo docente
+    if ((await consultaRepository.findAllByDocente({ docente, horaInicio: { $lt: nuevaHoraFin }, horaFin: { $gt: nuevaHoraInicio } })).length !== 0) {
+        res.status(400).send({ message: "Ya existe una consulta para el docente de este dictado que se superpone con el rango de horario dado" })
+        return
+    }
 
     // Asegurar una duración mínima de 15 minutos
     if (nuevaHoraInicio.getTime() + 900000 > nuevaHoraFin.getTime()) {
@@ -221,12 +230,13 @@ async function findAllByDictado(req: Request, res: Response) {
     const { page, limit } = getSanitizedPaginationParams(req)
     const { horaInicio, horaFin } = getSanitizedDateTimeRangeParams(req)
 
-    const filter: { dictado: ObjectId, horaInicio?: DateFilter, horaFin?: DateFilter } = { dictado: new ObjectId(dictado)}
+    const filter: { dictado: ObjectId, horaInicio?: DateFilter, horaFin?: DateFilter } = { dictado: new ObjectId(dictado) }
     if (horaInicio !== "") filter.horaInicio = { $gte: new Date(horaInicio) }
     if (horaFin !== "") filter.horaFin = { $lte: new Date(horaFin) }
 
     const consultas = await consultaRepository.findAllByFilter(filter, { page, limit })
-    res.json({ data: consultas, total: await consultaRepository.countByFilter(filter), page, totalPages: limit === 0 ? 1 : (consultas.length / limit) })
+    const total = await consultaRepository.countByFilter(filter)
+    res.json({ data: consultas, total, page, limit })
 }
 
 async function findAllByDocente(req: Request, res: Response) {
@@ -239,12 +249,13 @@ async function findAllByDocente(req: Request, res: Response) {
     const { page, limit } = getSanitizedPaginationParams(req)
     const { horaInicio, horaFin } = getSanitizedDateTimeRangeParams(req)
 
-    const filter: { docente: ObjectId, horaInicio?: DateFilter, horaFin?: DateFilter } = { docente: new ObjectId(docente)}
+    const filter: { docente: ObjectId, horaInicio?: DateFilter, horaFin?: DateFilter } = { docente: new ObjectId(docente) }
     if (horaInicio !== "") filter.horaInicio = { $gte: new Date(horaInicio) }
     if (horaFin !== "") filter.horaFin = { $lte: new Date(horaFin) }
 
     const consultas = await consultaRepository.findAllByDocente(filter, { page, limit })
-    res.json({ data: consultas, total: await consultaRepository.countByDocente(filter), page, totalPages: limit === 0 ? 1 : (consultas.length / limit) })
+    const total = await consultaRepository.countByDocente(filter)
+    res.json({ data: consultas, total, page, limit })
 }
 
 async function findAllByMateria(req: Request, res: Response) {
@@ -257,12 +268,13 @@ async function findAllByMateria(req: Request, res: Response) {
     const { page, limit } = getSanitizedPaginationParams(req)
     const { horaInicio, horaFin } = getSanitizedDateTimeRangeParams(req)
 
-    const filter: { materia: ObjectId, horaInicio?: DateFilter, horaFin?: DateFilter } = { materia: new ObjectId(materia)}
+    const filter: { materia: ObjectId, horaInicio?: DateFilter, horaFin?: DateFilter } = { materia: new ObjectId(materia) }
     if (horaInicio !== "") filter.horaInicio = { $gte: new Date(horaInicio) }
     if (horaFin !== "") filter.horaFin = { $lte: new Date(horaFin) }
 
     const consultas = await consultaRepository.findAllByMateria(filter, { page, limit })
-    res.json({ data: consultas, total: await consultaRepository.countByMateria(filter), page, totalPages: limit === 0 ? 1 : (consultas.length / limit) })
+    const total = await consultaRepository.countByMateria(filter)
+    res.json({ data: consultas, total, page, limit })
 }
 
 export { extractInput, sanitizeInput, findAll, findOne, add, update, remove, findAllByDictado, findAllByDocente, findAllByMateria }

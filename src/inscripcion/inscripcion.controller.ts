@@ -5,6 +5,8 @@ import { ObjectId } from "mongodb"
 import { AlumnoRepository } from "../alumno/alumno.repository.js"
 import { ConsultaRepository } from "../consulta/consulta.repository.js"
 import { EstadoConsulta } from "../consulta/consulta.entity.js"
+import { getSanitizedDateTimeRangeParams, getSanitizedPaginationParams } from "../shared/controller.middlewares.js"
+import { DateFilter } from "../shared/types/DateFilter.js"
 
 const inscripcionRepository = new InscripcionRepository()
 const alumnoRepository = new AlumnoRepository()
@@ -19,7 +21,7 @@ function extractInput(req: Request, res: Response, next: NextFunction) {
 }
 
 async function sanitizeInput(req: Request, res: Response, next: NextFunction) {
-    const {alumno, consulta} = req.body.input
+    const { alumno, consulta } = req.body.input
     req.body.sanitizedInput = {}
 
     // Verificar alumno
@@ -32,7 +34,7 @@ async function sanitizeInput(req: Request, res: Response, next: NextFunction) {
         }
         // Si no existe un alumno con la id ingresada
         if (!(await alumnoRepository.findOne({ id: alumno }))) {
-            res.status(404).send({ message: "Alumno con id '" + alumno + "' no encontrado"})
+            res.status(404).send({ message: "Alumno con id '" + alumno + "' no encontrado" })
             return
         }
         // Sino, el alumno es válido
@@ -50,7 +52,7 @@ async function sanitizeInput(req: Request, res: Response, next: NextFunction) {
         // Si no existe una consulta con la id ingresada
         const consultaRecuperada = await consultaRepository.findOne({ id: consulta })
         if (!consultaRecuperada) {
-            res.status(404).send({ message: "Consulta con id '" + consulta + "' no encontrada"})
+            res.status(404).send({ message: "Consulta con id '" + consulta + "' no encontrada" })
             return
         }
         // Si se está creando la inscripción, pero la consulta ya finalizó o fue cancelada
@@ -59,13 +61,13 @@ async function sanitizeInput(req: Request, res: Response, next: NextFunction) {
             return
         }
         // Si el alumno ya está inscripto a esa consulta
-        if (await inscripcionRepository.findOneByFilter({alumno: ObjectId.createFromHexString(alumno), consulta: ObjectId.createFromHexString(consulta)})) {
+        if (await inscripcionRepository.findOneByFilter({ alumno: ObjectId.createFromHexString(alumno), consulta: ObjectId.createFromHexString(consulta) })) {
             res.status(400).send({ message: "Ya está inscripto a esta consulta" })
             return
         }
         // Si el alumno ya tiene inscripciones en ese rango horario
-        if ((await inscripcionRepository.findAllByAlumnoInHorario({ alumno: req.body.sanitizedInput.alumno, horaInicio: consultaRecuperada.horaInicio, horaFin: consultaRecuperada.horaFin })).length !== 0) {
-            res.status(400).send({ message: "El horario de la consulta a la que intenta inscribirse se superpone con el de otra consulta a la que está inscripto"})
+        if ((await inscripcionRepository.findAllByFilterWithHorario({ alumno: req.body.sanitizedInput.alumno, horaInicio: { $lt: consultaRecuperada.horaFin }, horaFin: { $gt: consultaRecuperada.horaInicio } })).length !== 0) {
+            res.status(400).send({ message: "El horario de la consulta a la que intenta inscribirse se superpone con el de otra consulta a la que está inscripto" })
             return
         }
         // Sino, la consulta es válida
@@ -111,14 +113,23 @@ function handleError(res: Response, err: any) {
 
 // ----- Operaciones CRUD comunes -----
 
-async function findAll(_req: Request, res: Response) {
-    res.json({ data: await inscripcionRepository.findAll() })
+async function findAll(req: Request, res: Response) {
+    const { page, limit } = getSanitizedPaginationParams(req)
+    const { horaInicio, horaFin } = getSanitizedDateTimeRangeParams(req)
+
+    const filter: { horaInicio?: DateFilter, horaFin?: DateFilter } = {}
+    if (horaInicio !== "") filter.horaInicio = { $gte: new Date(horaInicio) }
+    if (horaFin !== "") filter.horaFin = { $lte: new Date(horaFin) }
+
+    const inscripciones = await inscripcionRepository.findAllByFilterWithHorario(filter, { page, limit })
+    const total = await inscripcionRepository.countByFilterWithHorario(filter)
+    res.json({ data: inscripciones, total, page, limit })
 }
 
 async function findOne(req: Request, res: Response) {
     const inscripcion = await inscripcionRepository.findOne({ id: req.params.id })
     if (!inscripcion) {
-        res.status(404).send({ message: "Inscripcion no encontrado" })
+        res.status(404).send({ message: "Inscripcion no encontrada" })
         return
     }
     res.json({ data: inscripcion })
@@ -129,7 +140,7 @@ async function add(req: Request, res: Response) {
     const inscripcionInput = new Inscripcion(alumno, consulta)
     try {
         const inscripcion = await inscripcionRepository.add(inscripcionInput)
-        res.status(201).send({ message: "Inscripcion creado con éxito", data: inscripcion })
+        res.status(201).send({ message: "Inscripcion creada con éxito", data: inscripcion })
     } catch (err: any) {
         handleError(res, err)
     }
@@ -139,10 +150,10 @@ async function update(req: Request, res: Response) {
     try {
         const inscripcion = await inscripcionRepository.update({ id: req.params.id }, req.body.sanitizedInput)
         if (!inscripcion) {
-            res.status(404).send({ message: "Inscripcion no encontrado" })
+            res.status(404).send({ message: "Inscripcion no encontrada" })
             return
         }
-        res.status(201).send({ message: "Inscripcion modificado con éxito", data: inscripcion })
+        res.status(201).send({ message: "Inscripcion modificada con éxito", data: inscripcion })
     } catch (err: any) {
         handleError(res, err)
     }
@@ -151,10 +162,10 @@ async function update(req: Request, res: Response) {
 async function remove(req: Request, res: Response) {
     const inscripcion = await inscripcionRepository.delete({ id: req.params.id })
     if (!inscripcion) {
-        res.status(404).send({ message: "Inscripcion no encontrado" })
+        res.status(404).send({ message: "Inscripcion no encontrada" })
         return
     }
-    res.status(200).send({ message: "Inscripcion borrado con éxito", data: inscripcion })
+    res.status(200).send({ message: "Inscripcion borrada con éxito", data: inscripcion })
 }
 
 // ----- Operaciones específicas -----
@@ -165,7 +176,17 @@ async function findAllByAlumno(req: Request, res: Response) {
         res.status(400).send({ message: "El id de alumno ingresado no es válido" })
         return
     }
-    res.json({ data: await inscripcionRepository.findAllByFilter({ alumno: new ObjectId(alumno) }) })
+
+    const { page, limit } = getSanitizedPaginationParams(req)
+    const { horaInicio, horaFin } = getSanitizedDateTimeRangeParams(req)
+
+    const filter: { alumno: ObjectId, horaInicio?: DateFilter, horaFin?: DateFilter } = { alumno: new ObjectId(alumno) }
+    if (horaInicio !== "") filter.horaInicio = { $gte: new Date(horaInicio) }
+    if (horaFin !== "") filter.horaFin = { $lte: new Date(horaFin) }
+
+    const inscripciones = await inscripcionRepository.findAllByFilterWithHorario(filter, { page, limit })
+    const total = await inscripcionRepository.countByFilterWithHorario(filter)
+    res.json({ data: inscripciones, total, page, limit })
 }
 
 async function findAllByConsulta(req: Request, res: Response) {
@@ -174,22 +195,13 @@ async function findAllByConsulta(req: Request, res: Response) {
         res.status(400).send({ message: "El id de consulta ingresado no es válido" })
         return
     }
-    res.json({ data: await inscripcionRepository.findAllByFilter({ consulta: new ObjectId(consulta) }) })
+
+    const { page, limit } = getSanitizedPaginationParams(req)
+    const filter = {consulta: new ObjectId(consulta)}
+
+    const inscripciones = await inscripcionRepository.findAllByFilter(filter)
+    const total = await inscripcionRepository.countByFilter(filter)
+    res.json({ data: inscripciones, total, page, limit })
 }
 
-async function findAllByAlumnoInHorario(req: Request, res: Response) {
-    let alumno = req.params.alumno
-    if (!ObjectId.isValid(alumno)) {
-        res.status(400).send({ message: "El id de alumno ingresado no es válido" })
-        return
-    }
-    let horaInicio = req.params.horaInicio
-    let horaFin = req.params.horaFin
-    if (isNaN(Date.parse(horaInicio)) || isNaN(Date.parse(horaFin))) {
-        res.status(400).send({ message: "El rango horario ingresado no es válido" })
-        return
-    }
-    res.json({ data: await inscripcionRepository.findAllByAlumnoInHorario({ alumno: new ObjectId(alumno), horaInicio: new Date(horaInicio), horaFin: new Date(horaFin) }) })
-}
-
-export { extractInput, sanitizeInput, findAll, findOne, add, update, remove, findAllByAlumno, findAllByConsulta, findAllByAlumnoInHorario }
+export { extractInput, sanitizeInput, findAll, findOne, add, update, remove, findAllByAlumno, findAllByConsulta }

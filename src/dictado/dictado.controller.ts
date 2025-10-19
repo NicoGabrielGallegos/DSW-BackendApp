@@ -97,7 +97,8 @@ async function findAll(req: Request, res: Response) {
     const { page, limit } = getSanitizedPaginationParams(req)
 
     const dictados = await dictadoRepository.findAll({ page, limit })
-    res.json({ data: dictados, total: await dictadoRepository.count(), page, totalPages: limit === 0 ? 1 : (dictados.length / limit) })
+    const total = await dictadoRepository.count()
+    res.json({ data: dictados, total, page, limit })
 }
 
 async function findOne(req: Request, res: Response) {
@@ -152,9 +153,11 @@ async function findAllByDocente(req: Request, res: Response) {
     }
 
     const { page, limit } = getSanitizedPaginationParams(req)
+    const filter = { docente: new ObjectId(docente) }
 
-    const dictadosByDocente = await dictadoRepository.findAllByFilter({ docente: new ObjectId(docente) }, { page, limit })
-    res.json({ data: dictadosByDocente, total: await dictadoRepository.countByFilter({ docente: new ObjectId(docente) }), page, totalPages: limit === 0 ? 1 : (dictadosByDocente.length / limit) })
+    const dictadosByDocente = await dictadoRepository.findAllByFilter(filter, { page, limit })
+    const total = await dictadoRepository.countByFilter(filter)
+    res.json({ data: dictadosByDocente, total, page, limit })
 }
 
 async function findAllByMateria(req: Request, res: Response) {
@@ -165,9 +168,11 @@ async function findAllByMateria(req: Request, res: Response) {
     }
 
     const { page, limit } = getSanitizedPaginationParams(req)
+    const filter = { materia: new ObjectId(materia) }
 
-    const dictadosByMateria = await dictadoRepository.findAllByFilter({ materia: new ObjectId(materia) }, { page, limit })
-    res.json({ data: dictadosByMateria, total: await dictadoRepository.countByFilter({ materia: new ObjectId(materia) }), page, totalPages: limit === 0 ? 1 : (dictadosByMateria.length / limit) })
+    const dictadosByMateria = await dictadoRepository.findAllByFilter(filter, { page, limit })
+    const total = await dictadoRepository.countByFilter(filter)
+    res.json({ data: dictadosByMateria, total, page, limit })
 }
 
 async function findOneByDocenteAndMateria(req: Request, res: Response) {

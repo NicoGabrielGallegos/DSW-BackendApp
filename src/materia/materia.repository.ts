@@ -1,16 +1,27 @@
 import { Repository } from "../shared/repository.js";
 import { Materia } from "./materia.entity.js";
 import { db } from "../shared/db/connection.js";
-import { ObjectId } from "mongodb";
+import { ObjectId, Sort } from "mongodb";
 import { Dictado } from "../dictado/dictado.entity.js";
 
 const materias = db.collection<Materia>("materias")
 const dictados = db.collection<Dictado>("dictados")
 
+const defaultSort: Sort = { descripcion: 1 }
+
 export class MateriaRepository implements Repository<Materia> {
 
-    public async findAll(options: { page: number, limit: number } = { page: 1, limit: 0 }): Promise<Materia[]> {
-        return await materias.find().sort({ descripcion: 1 }).skip((options.page - 1) * options.limit).limit(options.limit).toArray()
+    private aggregationSort(alias: string, sort: Sort) {
+        let newSort: any = {}
+        if (Object.keys(sort).length === 0) sort = defaultSort
+        Object.keys(sort).forEach(key => {
+            newSort[`${alias}.${key}`] = sort[key as keyof Sort]
+        })
+        return newSort
+    }
+
+    public async findAll(options: { page: number, limit: number, sort?: Sort } = { page: 1, limit: 0 }): Promise<Materia[]> {
+        return await materias.find().sort(options.sort || defaultSort).skip((options.page - 1) * options.limit).limit(options.limit).toArray()
     }
 
     public async findOne(filter: { id: string }): Promise<Materia | undefined> {
@@ -41,11 +52,17 @@ export class MateriaRepository implements Repository<Materia> {
         return await materias.findOne(filter) || undefined
     }
 
-    public async findAllByFilter(filter: { descripcion?: string }): Promise<Materia[] | undefined> {
-        return await materias.find(filter).sort({ descripcion: 1 }).toArray() || undefined
+    public async findAllByFilter(
+        filter: { descripcion?: string },
+        options: { page: number, limit: number, sort?: Sort } = { page: 1, limit: 0 }
+    ): Promise<Materia[]> {
+        return await materias.find(filter).sort(options.sort || defaultSort).toArray() || undefined
     }
 
-    public async findAllByDocente(filter: { docente: ObjectId }, options: { page: number, limit: number } = { page: 1, limit: 0 }): Promise<Materia[]> {
+    public async findAllByDocente(
+        filter: { docente: ObjectId },
+        options: { page: number, limit: number, sort?: Sort } = { page: 1, limit: 0 }
+    ): Promise<Materia[]> {
         const materiasByDocente: Materia[] = [];
         const cursor = dictados.aggregate([
             {
@@ -63,7 +80,7 @@ export class MateriaRepository implements Repository<Materia> {
                 $project: { "materia": 1 }
             },
             {
-                $sort: { "materia.descripcion": 1 }
+                $sort: this.aggregationSort("materia", options.sort || defaultSort)
             }
         ])
 
@@ -87,7 +104,7 @@ export class MateriaRepository implements Repository<Materia> {
         return await materias.countDocuments()
     }
 
-    public async countByDocente(filter: { docente: ObjectId }, options: { page: number, limit: number } = { page: 1, limit: 0 }): Promise<number> {
+    public async countByDocente(filter: { docente: ObjectId }): Promise<number> {
         return (await dictados.aggregate([
             {
                 $match: filter

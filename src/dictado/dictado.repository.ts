@@ -1,14 +1,16 @@
 import { Repository } from "../shared/repository.js";
 import { Dictado } from "./dictado.entity.js";
 import { db } from "../shared/db/connection.js";
-import { ObjectId } from "mongodb";
+import { ObjectId, Sort } from "mongodb";
 
 const dictados = db.collection<Dictado>("dictados")
 
+const defaultSort: Sort = { materia: 1, docente: 1 }
+
 export class DictadoRepository implements Repository<Dictado> {
 
-    public async findAll(options: { page: number, limit: number } = { page: 1, limit: 0 }): Promise<Dictado[]> {
-        return await dictados.find().sort({ materia: 1, docente: 1 }).skip((options.page - 1) * options.limit).limit(options.limit).toArray()
+    public async findAll(options: { page: number, limit: number, sort?: Sort } = { page: 1, limit: 0 }): Promise<Dictado[]> {
+        return await dictados.find().sort(options.sort || defaultSort).skip((options.page - 1) * options.limit).limit(options.limit).toArray()
     }
 
     public async findOne(filter: { id: string }): Promise<Dictado | undefined> {
@@ -39,8 +41,11 @@ export class DictadoRepository implements Repository<Dictado> {
         return await dictados.findOne(filter) || undefined
     }
 
-    public async findAllByFilter(filter: { docente?: ObjectId, materia?: ObjectId }, options: { page: number, limit: number } = { page: 1, limit: 0 }): Promise<Dictado[]> {
-        return await dictados.find(filter).sort({ materia: 1, docente: 1 }).skip((options.page - 1) * options.limit).limit(options.limit).toArray() || undefined
+    public async findAllByFilter(
+        filter: { docente?: ObjectId, materia?: ObjectId },
+        options: { page: number, limit: number, sort?: Sort } = { page: 1, limit: 0 }
+    ): Promise<Dictado[]> {
+        return await dictados.find(filter).sort(options.sort || defaultSort).skip((options.page - 1) * options.limit).limit(options.limit).toArray() || undefined
     }
 
     public async deleteByDocente(filter: { docente: ObjectId }): Promise<void> {
