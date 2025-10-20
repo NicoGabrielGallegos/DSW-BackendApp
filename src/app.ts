@@ -5,6 +5,7 @@ import { materiaRouter } from "./materia/materia.routes.js"
 import { dictadoRouter } from "./dictado/dictado.routes.js"
 import { consultaRouter } from "./consulta/consulta.routes.js"
 import { inscripcionRouter } from "./inscripcion/inscripcion.routes.js"
+import { administradorRouter } from "./administrador/administrador.routes.js"
 import { authRouter } from "./shared/auth/auth.routes.js"
 import cors from "cors"
 
@@ -27,6 +28,7 @@ app.use("/api/materias", materiaRouter)
 app.use("/api/dictados", dictadoRouter)
 app.use("/api/consultas", consultaRouter)
 app.use("/api/inscripciones", inscripcionRouter)
+app.use("/api/administradores", administradorRouter)
 app.use("/api/auth", authRouter)
 
 // Middleware para el manejo de peticiones a recursos no válidos
