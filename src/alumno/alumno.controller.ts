@@ -157,42 +157,4 @@ async function findAllByConsulta(req: Request, res: Response) {
     res.json({ data: alumnos, total, page, limit })
 }
 
-// ----- Login -----
-
-async function login(req: Request, res: Response) {
-    const { correo, password } = req.body.input
-
-    // Verificar que el alumno exista
-    if (!isValidEmail(correo)) {
-        res.status(400).send({ message: "Correo o contraseña incorrectos" })
-        return
-    }
-    const alumno = await alumnoRepository.findOneByFilter({ correo })
-    if (!alumno) {
-        res.status(400).json({ message: "Correo o contraseña incorrectos" })
-        return
-    }
-
-    // Verificar que la contraseña sea correcta
-    const passwordMatch = await compare(password, alumno.password)
-
-    if (!passwordMatch) {
-        res.status(400).json({ message: "Correo o contraseña incorrectos" })
-        return
-    }
-
-    const payload = {
-        id: alumno._id?.toString() || "",
-        legajo: alumno.legajo,
-        nombre: alumno.nombre,
-        apellido: alumno.apellido,
-        correo: alumno.correo,
-        rol: "alumno"
-    }
-
-    const token = jwk.sign({ user: payload }, PRIVATE_KEY, { expiresIn: "1h" })
-
-    res.json({ data: token })
-}
-
-export { extractInput, sanitizeInput, findAll, findOne, add, update, remove, findOneByCorreo, findAllByConsulta, login }
+export { extractInput, sanitizeInput, findAll, findOne, add, update, remove, findOneByCorreo, findAllByConsulta }
