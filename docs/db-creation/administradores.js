@@ -39,4 +39,4 @@ db.runCommand({
 })
 
 // Administrador
-db.administradores.insertOne({ nombre: "Admin", apellido: "Istrador", correo: "admin@gmail.com", permisos: [1, 2, 3, 4, 5, 6], password: "asd123" })
+db.administradores.insertOne({ nombre: "Admin", apellido: "Istrador", correo: "admin@gmail.com", permisos: [1, 2, 3, 4, 5, 6], password: "$2b$10$or0i5nrTkUy/0jQhgKUc2eXjobLu.ZEXpOZIm5j2pSVAO/j5OJua6" })
