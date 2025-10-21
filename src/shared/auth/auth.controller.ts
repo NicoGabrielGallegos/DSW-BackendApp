@@ -40,6 +40,10 @@ function auth(req: Request, res: Response, next: NextFunction) {
     }
 }
 
+function privateDocentesOnly(req: Request, res: Response, next: NextFunction) {
+    req.body.loggedUser
+}
+
 function extractInput(req: Request, res: Response, next: NextFunction) {
     req.body.input = {
         correo: req.body.correo,

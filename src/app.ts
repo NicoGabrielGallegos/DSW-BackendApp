@@ -8,6 +8,7 @@ import { inscripcionRouter } from "./inscripcion/inscripcion.routes.js"
 import { administradorRouter } from "./administrador/administrador.routes.js"
 import { authRouter } from "./shared/auth/auth.routes.js"
 import cors from "cors"
+import { auth } from "./shared/auth/auth.controller.js"
 
 
 // Crear aplicación Express
@@ -22,13 +23,13 @@ app.use(cors({
 app.use(express.json())
 
 // Router hacia los recursos
-app.use("/api/alumnos", alumnoRouter)
-app.use("/api/docentes", docenteRouter)
-app.use("/api/materias", materiaRouter)
-app.use("/api/dictados", dictadoRouter)
-app.use("/api/consultas", consultaRouter)
-app.use("/api/inscripciones", inscripcionRouter)
-app.use("/api/administradores", administradorRouter)
+app.use("/api/alumnos", auth, alumnoRouter)
+app.use("/api/docentes", auth, docenteRouter)
+app.use("/api/materias", auth, materiaRouter)
+app.use("/api/dictados", auth, dictadoRouter)
+app.use("/api/consultas", auth, consultaRouter)
+app.use("/api/inscripciones", auth, inscripcionRouter)
+app.use("/api/administradores", auth, administradorRouter)
 app.use("/api/auth", authRouter)
 
 // Middleware para el manejo de peticiones a recursos no válidos

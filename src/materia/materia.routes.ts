@@ -6,7 +6,7 @@ import { auth } from "../shared/auth/auth.controller.js";
 export const materiaRouter = Router()
 
 // Rutas comunes
-materiaRouter.get("/", auth, findAll)
+materiaRouter.get("/", findAll)
 materiaRouter.get("/:id", findOne)
 materiaRouter.post("/", extractInput, assureCompleteInput, sanitizeInput, add)
 materiaRouter.put("/:id", extractInput, sanitizeInput, update)
