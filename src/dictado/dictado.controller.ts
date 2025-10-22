@@ -4,7 +4,7 @@ import { Dictado } from "./dictado.entity.js"
 import { ObjectId } from "mongodb"
 import { DocenteRepository } from "../docente/docente.repository.js"
 import { MateriaRepository } from "../materia/materia.repository.js"
-import { getPopulateParams, getSanitizedPaginationParams } from "../shared/controller.js"
+import { getPopulateParams, getSanitizedPaginationParams, getSanitizedSortingParams } from "../shared/controller.js"
 
 const dictadoRepository = new DictadoRepository()
 const docenteRepository = new DocenteRepository()
@@ -95,9 +95,10 @@ function handleError(res: Response, err: any) {
 
 async function findAll(req: Request, res: Response) {
     const { page, limit } = getSanitizedPaginationParams(req)
+    const { sort } = getSanitizedSortingParams(req)
     const { populate } = getPopulateParams(req)
 
-    const dictados = await dictadoRepository.findAll({ page, limit, populate })
+    const dictados = await dictadoRepository.findAll({ page, limit, sort, populate })
     const total = await dictadoRepository.count()
     res.json({ data: dictados, total, page, limit })
 }
@@ -157,10 +158,11 @@ async function findAllByDocente(req: Request, res: Response) {
     }
 
     const { page, limit } = getSanitizedPaginationParams(req)
+    const { sort } = getSanitizedSortingParams(req)
     const filter = { docente: new ObjectId(docente) }
     const { populate } = getPopulateParams(req)
 
-    const dictadosByDocente = await dictadoRepository.findAllByFilter(filter, { page, limit, populate })
+    const dictadosByDocente = await dictadoRepository.findAllByFilter(filter, { page, limit, sort, populate })
     const total = await dictadoRepository.countByFilter(filter)
     res.json({ data: dictadosByDocente, total, page, limit })
 }
@@ -173,10 +175,11 @@ async function findAllByMateria(req: Request, res: Response) {
     }
 
     const { page, limit } = getSanitizedPaginationParams(req)
+    const { sort } = getSanitizedSortingParams(req)
     const filter = { materia: new ObjectId(materia) }
     const { populate } = getPopulateParams(req)
 
-    const dictadosByMateria = await dictadoRepository.findAllByFilter(filter, { page, limit, populate })
+    const dictadosByMateria = await dictadoRepository.findAllByFilter(filter, { page, limit, sort, populate })
     const total = await dictadoRepository.countByFilter(filter)
     res.json({ data: dictadosByMateria, total, page, limit })
 }

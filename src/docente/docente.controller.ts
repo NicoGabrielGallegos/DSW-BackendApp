@@ -5,7 +5,7 @@ import { isValidEmail } from "../shared/validations.js";
 import { hash } from "bcryptjs";
 import { ObjectId } from "mongodb";
 import { DictadoRepository } from "../dictado/dictado.repository.js";
-import { getSanitizedPaginationParams } from "../shared/controller.js";
+import { getSanitizedPaginationParams, getSanitizedSortingParams } from "../shared/controller.js";
 
 const docenteRepository = new DocenteRepository()
 const dictadoRepository = new DictadoRepository()
@@ -76,8 +76,9 @@ function handleError(res: Response, err: any) {
 
 async function findAll(req: Request, res: Response) {
     const { page, limit } = getSanitizedPaginationParams(req)
+    const { sort } = getSanitizedSortingParams(req)
 
-    const docentes = await docenteRepository.findAll({ page, limit })
+    const docentes = await docenteRepository.findAll({ page, limit, sort })
     const total = await docenteRepository.count()
     res.json({ data: docentes, total, page, limit })
 }
@@ -146,9 +147,10 @@ async function findAllByMateria(req: Request, res: Response) {
     }
 
     const { page, limit } = getSanitizedPaginationParams(req)
+    const { sort } = getSanitizedSortingParams(req)
     const filter = { materia: new ObjectId(materia) }
 
-    const docentesByMateria = await docenteRepository.findAllByMateria(filter, { page, limit })
+    const docentesByMateria = await docenteRepository.findAllByMateria(filter, { page, limit, sort })
     const total = await docenteRepository.countByMateria(filter)
     res.json({ data: docentesByMateria, total, page, limit })
 }

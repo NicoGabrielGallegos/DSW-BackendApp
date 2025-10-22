@@ -3,7 +3,7 @@ import { ConsultaRepository } from "./consulta.repository.js"
 import { Consulta, EstadoConsulta } from "./consulta.entity.js"
 import { ObjectId } from "mongodb"
 import { DictadoRepository } from "../dictado/dictado.repository.js"
-import { getPopulateParams, getSanitizedDateTimeRangeParams, getSanitizedPaginationParams } from "../shared/controller.js"
+import { getPopulateParams, getSanitizedDateTimeRangeParams, getSanitizedPaginationParams, getSanitizedSortingParams } from "../shared/controller.js"
 import { DateFilter } from "../shared/types/DateFilter.js"
 
 const consultaRepository = new ConsultaRepository()
@@ -129,6 +129,7 @@ function handleError(res: Response, err: any) {
 
 async function findAll(req: Request, res: Response) {
     const { page, limit } = getSanitizedPaginationParams(req)
+    const { sort } = getSanitizedSortingParams(req)
     const { horaInicio, horaFin } = getSanitizedDateTimeRangeParams(req)
     const { populate } = getPopulateParams(req)
 
@@ -136,7 +137,7 @@ async function findAll(req: Request, res: Response) {
     if (horaInicio !== "") filter.horaInicio = { $gte: new Date(horaInicio) }
     if (horaFin !== "") filter.horaFin = { $lte: new Date(horaFin) }
 
-    const consultas = await consultaRepository.findAllByFilter(filter, { page, limit, populate })
+    const consultas = await consultaRepository.findAllByFilter(filter, { page, limit, sort, populate })
     const total = await consultaRepository.countByFilter(filter)
     res.json({ data: consultas, total, page, limit })
 }
@@ -234,6 +235,7 @@ async function findAllByDictado(req: Request, res: Response) {
     }
 
     const { page, limit } = getSanitizedPaginationParams(req)
+    const { sort } = getSanitizedSortingParams(req)
     const { horaInicio, horaFin } = getSanitizedDateTimeRangeParams(req)
     const { populate } = getPopulateParams(req)
 
@@ -241,7 +243,7 @@ async function findAllByDictado(req: Request, res: Response) {
     if (horaInicio !== "") filter.horaInicio = { $gte: new Date(horaInicio) }
     if (horaFin !== "") filter.horaFin = { $lte: new Date(horaFin) }
 
-    const consultas = await consultaRepository.findAllByFilter(filter, { page, limit, populate })
+    const consultas = await consultaRepository.findAllByFilter(filter, { page, limit, sort, populate })
     const total = await consultaRepository.countByFilter(filter)
     res.json({ data: consultas, total, page, limit })
 }
@@ -254,6 +256,7 @@ async function findAllByDocente(req: Request, res: Response) {
     }
 
     const { page, limit } = getSanitizedPaginationParams(req)
+    const { sort } = getSanitizedSortingParams(req)
     const { horaInicio, horaFin } = getSanitizedDateTimeRangeParams(req)
     const { populate } = getPopulateParams(req)
 
@@ -261,7 +264,7 @@ async function findAllByDocente(req: Request, res: Response) {
     if (horaInicio !== "") filter.horaInicio = { $gte: new Date(horaInicio) }
     if (horaFin !== "") filter.horaFin = { $lte: new Date(horaFin) }
 
-    const consultas = await consultaRepository.findAllByDocente(filter, { page, limit, populate })
+    const consultas = await consultaRepository.findAllByDocente(filter, { page, limit, sort, populate })
     const total = await consultaRepository.countByDocente(filter)
     res.json({ data: consultas, total, page, limit })
 }
@@ -274,6 +277,7 @@ async function findAllByMateria(req: Request, res: Response) {
     }
 
     const { page, limit } = getSanitizedPaginationParams(req)
+    const { sort } = getSanitizedSortingParams(req)
     const { horaInicio, horaFin } = getSanitizedDateTimeRangeParams(req)
     const { populate } = getPopulateParams(req)
 
@@ -281,7 +285,7 @@ async function findAllByMateria(req: Request, res: Response) {
     if (horaInicio !== "") filter.horaInicio = { $gte: new Date(horaInicio) }
     if (horaFin !== "") filter.horaFin = { $lte: new Date(horaFin) }
 
-    const consultas = await consultaRepository.findAllByMateria(filter, { page, limit, populate })
+    const consultas = await consultaRepository.findAllByMateria(filter, { page, limit, sort, populate })
     const total = await consultaRepository.countByMateria(filter)
     res.json({ data: consultas, total, page, limit })
 }

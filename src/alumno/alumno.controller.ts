@@ -7,7 +7,7 @@ import { ObjectId } from "mongodb"
 import { InscripcionRepository } from "../inscripcion/inscripcion.repository.js"
 import jwk from 'jsonwebtoken'
 import { PRIVATE_KEY } from "../shared/auth/auth.controller.js"
-import { getSanitizedPaginationParams } from "../shared/controller.js"
+import { getSanitizedPaginationParams, getSanitizedSortingParams } from "../shared/controller.js"
 
 const alumnoRepository = new AlumnoRepository()
 const inscripcionRepository = new InscripcionRepository()
@@ -83,8 +83,9 @@ function handleError(res: Response, err: any) {
 
 async function findAll(req: Request, res: Response) {
     const { page, limit } = getSanitizedPaginationParams(req)
+    const { sort } = getSanitizedSortingParams(req)
 
-    const alumnos = await alumnoRepository.findAll()
+    const alumnos = await alumnoRepository.findAll({ page, limit, sort })
     const total = await alumnoRepository.count()
     res.json({ data: alumnos, total, page, limit })
 }
@@ -150,9 +151,10 @@ async function findAllByConsulta(req: Request, res: Response) {
         return
     }
     const { page, limit } = getSanitizedPaginationParams(req)
+    const { sort } = getSanitizedSortingParams(req)
     const filter = { consulta: new ObjectId(consulta) }
 
-    const alumnos = await alumnoRepository.findAllByConsulta(filter, {page, limit})
+    const alumnos = await alumnoRepository.findAllByConsulta(filter, { page, limit, sort })
     const total = await alumnoRepository.countByConsulta(filter)
     res.json({ data: alumnos, total, page, limit })
 }

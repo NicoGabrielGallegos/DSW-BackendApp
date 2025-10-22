@@ -54,3 +54,19 @@ export function getPopulateParams(req: Request) {
 
     return { populate }
 }
+
+export function getSanitizedSortingParams(req: Request) {
+    let sort: any = {}
+    req.query.sort?.toString().split(",").forEach(s => {
+        const [field, direction] = s.split(":")
+        if (["asc", "ascending", "1"].includes(direction)) sort[field] = 1
+        else if (["desc", "descending", "-1"].includes(direction)) sort[field] = -1
+    })
+
+    if (Object.keys(sort).length === 0) {
+        sort = null
+    }
+
+    return { sort }
+
+}

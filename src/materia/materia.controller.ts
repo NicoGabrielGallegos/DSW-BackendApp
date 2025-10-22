@@ -3,7 +3,7 @@ import { MateriaRepository } from "./materia.repository.js"
 import { Materia } from "./materia.entity.js"
 import { ObjectId } from "mongodb"
 import { DictadoRepository } from "../dictado/dictado.repository.js"
-import { getSanitizedPaginationParams } from "../shared/controller.js"
+import { getSanitizedPaginationParams, getSanitizedSortingParams } from "../shared/controller.js"
 
 const materiaRepository = new MateriaRepository()
 const dictadoRepository = new DictadoRepository()
@@ -55,8 +55,9 @@ function handleError(res: Response, err: any) {
 
 async function findAll(req: Request, res: Response) {
     const { page, limit } = getSanitizedPaginationParams(req)
+    const { sort } = getSanitizedSortingParams(req)
 
-    const materias = await materiaRepository.findAll({ page, limit })
+    const materias = await materiaRepository.findAll({ page, limit, sort })
     res.json({ data: materias, total: await materiaRepository.count(), page, totalPages: limit === 0 ? 1 : (materias.length / limit) })
 }
 
@@ -124,8 +125,9 @@ async function findAllByDocente(req: Request, res: Response) {
     }
 
     const { page, limit } = getSanitizedPaginationParams(req)
+    const { sort } = getSanitizedSortingParams(req)
 
-    const materiasByDocente = await materiaRepository.findAllByDocente({ docente: new ObjectId(docente) }, { page, limit })
+    const materiasByDocente = await materiaRepository.findAllByDocente({ docente: new ObjectId(docente) }, { page, limit, sort })
     res.json({ data: materiasByDocente, total: await materiaRepository.countByDocente({ docente: new ObjectId(docente) }), page, totalPages: limit === 0 ? 1 : (materiasByDocente.length / limit) })
 }
 
