@@ -1,7 +1,6 @@
 import { Router } from "express";
 import { add, findAll, findOne, update, remove, extractInput, sanitizeInput, findOneByDescripcion, findAllByDocente } from "./materia.controller.js";
 import { assureCompleteInput } from "../shared/controller.js";
-import { auth } from "../shared/auth/auth.controller.js";
 
 export const materiaRouter = Router()
 

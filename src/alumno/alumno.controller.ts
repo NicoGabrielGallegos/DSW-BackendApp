@@ -2,11 +2,9 @@ import { Request, Response, NextFunction } from "express"
 import { AlumnoRepository } from "./alumno.repository.js"
 import { Alumno } from "./alumno.entity.js"
 import { isValidEmail } from "../shared/validations.js"
-import { compare, hash } from "bcryptjs"
+import { hash } from "bcryptjs"
 import { ObjectId } from "mongodb"
 import { InscripcionRepository } from "../inscripcion/inscripcion.repository.js"
-import jwk from 'jsonwebtoken'
-import { PRIVATE_KEY } from "../shared/auth/auth.controller.js"
 import { getSanitizedPaginationParams, getSanitizedSortingParams } from "../shared/controller.js"
 
 const alumnoRepository = new AlumnoRepository()

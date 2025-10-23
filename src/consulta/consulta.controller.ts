@@ -1,9 +1,9 @@
 import { Request, Response, NextFunction } from "express"
 import { ConsultaRepository } from "./consulta.repository.js"
-import { Consulta, EstadoConsulta } from "./consulta.entity.js"
+import { Consulta, ConsultaFilter, EstadoConsulta } from "./consulta.entity.js"
 import { ObjectId } from "mongodb"
 import { DictadoRepository } from "../dictado/dictado.repository.js"
-import { getPopulateParams, getSanitizedDateTimeRangeParams, getSanitizedPaginationParams, getSanitizedSortingParams } from "../shared/controller.js"
+import { getPopulateParams, getSanitizedDateTimeRangeParams, getSanitizedFilteringParams, getSanitizedPaginationParams, getSanitizedSortingParams } from "../shared/controller.js"
 import { DateFilter } from "../shared/types/DateFilter.js"
 
 const consultaRepository = new ConsultaRepository()
@@ -132,8 +132,9 @@ async function findAll(req: Request, res: Response) {
     const { sort } = getSanitizedSortingParams(req)
     const { horaInicio, horaFin } = getSanitizedDateTimeRangeParams(req)
     const { populate } = getPopulateParams(req)
+    const { filterQuery } = getSanitizedFilteringParams<ConsultaFilter>(req, ["estado"])
 
-    const filter: { horaInicio?: DateFilter, horaFin?: DateFilter } = {}
+    const filter: { horaInicio?: DateFilter, horaFin?: DateFilter, estado?: string } = {...filterQuery}
     if (horaInicio !== "") filter.horaInicio = { $gte: new Date(horaInicio) }
     if (horaFin !== "") filter.horaFin = { $lte: new Date(horaFin) }
 
@@ -238,8 +239,9 @@ async function findAllByDictado(req: Request, res: Response) {
     const { sort } = getSanitizedSortingParams(req)
     const { horaInicio, horaFin } = getSanitizedDateTimeRangeParams(req)
     const { populate } = getPopulateParams(req)
+    const { filterQuery } = getSanitizedFilteringParams<ConsultaFilter>(req, ["estado"])
 
-    const filter: { dictado: ObjectId, horaInicio?: DateFilter, horaFin?: DateFilter } = { dictado: new ObjectId(dictado) }
+    const filter: { dictado: ObjectId, horaInicio?: DateFilter, horaFin?: DateFilter, estado?: string } = { ...filterQuery, dictado: new ObjectId(dictado) }
     if (horaInicio !== "") filter.horaInicio = { $gte: new Date(horaInicio) }
     if (horaFin !== "") filter.horaFin = { $lte: new Date(horaFin) }
 
@@ -259,8 +261,9 @@ async function findAllByDocente(req: Request, res: Response) {
     const { sort } = getSanitizedSortingParams(req)
     const { horaInicio, horaFin } = getSanitizedDateTimeRangeParams(req)
     const { populate } = getPopulateParams(req)
+    const { filterQuery } = getSanitizedFilteringParams<ConsultaFilter>(req, ["estado"])
 
-    const filter: { docente: ObjectId, horaInicio?: DateFilter, horaFin?: DateFilter } = { docente: new ObjectId(docente) }
+    const filter: { docente: ObjectId, horaInicio?: DateFilter, horaFin?: DateFilter } = { ...filterQuery, docente: new ObjectId(docente) }
     if (horaInicio !== "") filter.horaInicio = { $gte: new Date(horaInicio) }
     if (horaFin !== "") filter.horaFin = { $lte: new Date(horaFin) }
 
@@ -280,8 +283,9 @@ async function findAllByMateria(req: Request, res: Response) {
     const { sort } = getSanitizedSortingParams(req)
     const { horaInicio, horaFin } = getSanitizedDateTimeRangeParams(req)
     const { populate } = getPopulateParams(req)
+    const { filterQuery } = getSanitizedFilteringParams<ConsultaFilter>(req, ["estado"])
 
-    const filter: { materia: ObjectId, horaInicio?: DateFilter, horaFin?: DateFilter } = { materia: new ObjectId(materia) }
+    const filter: { materia: ObjectId, horaInicio?: DateFilter, horaFin?: DateFilter } = { ...filterQuery, materia: new ObjectId(materia) }
     if (horaInicio !== "") filter.horaInicio = { $gte: new Date(horaInicio) }
     if (horaFin !== "") filter.horaFin = { $lte: new Date(horaFin) }
 

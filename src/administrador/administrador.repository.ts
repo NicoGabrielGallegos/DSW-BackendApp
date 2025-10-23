@@ -1,7 +1,7 @@
 import { Repository } from "../shared/repository.js";
 import { Administrador } from "./administrador.entity.js";
 import { db } from "../shared/db/connection.js";
-import { ObjectId, Sort, SortDirection } from "mongodb";
+import { ObjectId, Sort } from "mongodb";
 
 const administradores = db.collection<Administrador>("administradores")
 

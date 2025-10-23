@@ -1,11 +1,6 @@
 import { Request, Response, NextFunction } from "express";
 import { AdministradorRepository } from "./administrador.repository.js";
-import { Administrador } from "./administrador.entity.js";
 import { isValidEmail } from "../shared/validations.js";
-import { hash } from "bcryptjs";
-import { ObjectId } from "mongodb";
-import { DictadoRepository } from "../dictado/dictado.repository.js";
-import { getSanitizedPaginationParams } from "../shared/controller.js";
 
 const administradorRepository = new AdministradorRepository()
 
