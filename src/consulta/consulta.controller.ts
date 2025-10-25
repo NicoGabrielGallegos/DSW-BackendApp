@@ -192,7 +192,8 @@ async function update(req: Request, res: Response) {
     const { docente } = req.body.additionalInfo
 
     // Asegurar que la consulta no se superponga a otra del mismo docente
-    if ((await consultaRepository.findAllByDocente({ docente, horaInicio: { $lt: nuevaHoraFin }, horaFin: { $gt: nuevaHoraInicio } })).length !== 0) {
+    const consultasSuperpuestas = await consultaRepository.findAllByDocente({ docente, horaInicio: { $lt: nuevaHoraFin }, horaFin: { $gt: nuevaHoraInicio } })
+    if (consultasSuperpuestas.length > 1 || consultasSuperpuestas.length === 1 && consultasSuperpuestas[0]._id?.toString() !== consultaRecuperada._id?.toString()) {
         res.status(400).send({ message: "Ya existe una consulta para el docente de este dictado que se superpone con el rango de horario dado" })
         return
     }
