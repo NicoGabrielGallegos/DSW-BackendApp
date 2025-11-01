@@ -166,6 +166,14 @@ export class ConsultaRepository implements Repository<Consulta> {
         return consultasByDocente
     }
 
+    public async deleteByDictado(filter: { dictado: ObjectId }): Promise<void> {
+        await consultas.deleteMany(filter)
+    }
+
+    public async deleteByDictados(filter: { dictados: ObjectId[] }): Promise<void> {
+        await consultas.deleteMany({ dictado: { $in: filter.dictados } })
+    }
+
     public async count(): Promise<number> {
         return await consultas.countDocuments()
     }

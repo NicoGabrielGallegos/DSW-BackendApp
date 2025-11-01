@@ -3,11 +3,13 @@ import { ConsultaRepository } from "./consulta.repository.js"
 import { Consulta, ConsultaFilter, EstadoConsulta } from "./consulta.entity.js"
 import { ObjectId } from "mongodb"
 import { DictadoRepository } from "../dictado/dictado.repository.js"
+import { InscripcionRepository } from "../inscripcion/inscripcion.repository.js"
 import { getPopulateParams, getSanitizedDateTimeRangeParams, getSanitizedFilteringParams, getSanitizedPaginationParams, getSanitizedSortingParams } from "../shared/controller.js"
 import { DateFilter } from "../shared/types/DateFilter.js"
 
 const consultaRepository = new ConsultaRepository()
 const dictadoRepository = new DictadoRepository()
+const inscripcionRepository = new InscripcionRepository()
 
 function extractInput(req: Request, res: Response, next: NextFunction) {
     req.body.input = {
@@ -220,10 +222,11 @@ async function update(req: Request, res: Response) {
 async function remove(req: Request, res: Response) {
     const { populate } = getPopulateParams(req)
     const consulta = await consultaRepository.delete({ id: req.params.id }, { populate })
-    if (!consulta) {
+    if (!consulta || !consulta._id) {
         res.status(404).send({ message: "Consulta no encontrada" })
         return
     }
+    await inscripcionRepository.deleteByConsulta({ consulta: consulta._id })
     res.status(200).send({ message: "Consulta borrada con éxito", data: consulta })
 }
 

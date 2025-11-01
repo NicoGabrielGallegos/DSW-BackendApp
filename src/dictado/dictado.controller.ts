@@ -4,11 +4,15 @@ import { Dictado } from "./dictado.entity.js"
 import { ObjectId } from "mongodb"
 import { DocenteRepository } from "../docente/docente.repository.js"
 import { MateriaRepository } from "../materia/materia.repository.js"
+import { ConsultaRepository } from "../consulta/consulta.repository.js"
+import { InscripcionRepository } from "../inscripcion/inscripcion.repository.js"
 import { getPopulateParams, getSanitizedPaginationParams, getSanitizedSortingParams } from "../shared/controller.js"
 
 const dictadoRepository = new DictadoRepository()
 const docenteRepository = new DocenteRepository()
 const materiaRepository = new MateriaRepository()
+const consultaRepository = new ConsultaRepository()
+const inscripcionRepository = new InscripcionRepository()
 
 function extractInput(req: Request, _res: Response, next: NextFunction) {
     req.body.input = {
@@ -141,10 +145,12 @@ async function update(req: Request, res: Response) {
 async function remove(req: Request, res: Response) {
     const { populate } = getPopulateParams(req)
     const dictado = await dictadoRepository.delete({ id: req.params.id }, { populate })
-    if (!dictado) {
+    if (!dictado || !dictado._id) {
         res.status(404).send({ message: "Dictado no encontrado" })
         return
     }
+    await inscripcionRepository.deleteByConsultas({ consultas: (await consultaRepository.findAllByFilter({ dictado: dictado._id })).map(c => c._id as ObjectId) })
+    await consultaRepository.deleteByDictado({ dictado: dictado._id })
     res.status(200).send({ message: "Dictado borrado con éxito", data: dictado })
 }
 

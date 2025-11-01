@@ -71,7 +71,7 @@ export class InscripcionRepository implements Repository<Inscripcion> {
 
     public async add(item: Inscripcion, options: { populate?: string[] } = {}): Promise<Inscripcion | undefined> {
         item._id = (await inscripciones.insertOne(item)).insertedId
-        return await this.findOne({id: item._id.toString()}, options)
+        return await this.findOne({ id: item._id.toString() }, options)
     }
 
     public async update(filter: { id: string }, item: Inscripcion, options: { populate?: string[] } = {}): Promise<Inscripcion | undefined> {
@@ -171,12 +171,16 @@ export class InscripcionRepository implements Repository<Inscripcion> {
         return inscripcionesByFilterWithHorario
     }
 
-    public async deleteByAlumno(filter: { alumno: ObjectId }, options: { populate?: string[] } = {}): Promise<void> {
+    public async deleteByAlumno(filter: { alumno: ObjectId }): Promise<void> {
         await inscripciones.deleteMany(filter)
     }
 
     public async deleteByConsulta(filter: { consulta: ObjectId }): Promise<void> {
         await inscripciones.deleteMany(filter)
+    }
+
+    public async deleteByConsultas(filter: { consultas: ObjectId[] }): Promise<void> {
+        await inscripciones.deleteMany({ consulta: { $in: filter.consultas } })
     }
 
     public async count(): Promise<number> {

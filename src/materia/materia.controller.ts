@@ -3,10 +3,14 @@ import { MateriaRepository } from "./materia.repository.js"
 import { Materia } from "./materia.entity.js"
 import { ObjectId } from "mongodb"
 import { DictadoRepository } from "../dictado/dictado.repository.js"
+import { ConsultaRepository } from "../consulta/consulta.repository.js"
+import { InscripcionRepository } from "../inscripcion/inscripcion.repository.js"
 import { getSanitizedPaginationParams, getSanitizedSortingParams } from "../shared/controller.js"
 
 const materiaRepository = new MateriaRepository()
 const dictadoRepository = new DictadoRepository()
+const consultaRepository = new ConsultaRepository()
+const inscripcionRepository = new InscripcionRepository()
 
 function extractInput(req: Request, res: Response, next: NextFunction) {
     req.body.input = {
@@ -100,9 +104,9 @@ async function remove(req: Request, res: Response) {
         res.status(404).send({ message: "Materia no encontrada" })
         return
     }
-
+    await inscripcionRepository.deleteByConsultas({ consultas: (await consultaRepository.findAllByMateria({ materia: materia._id })).map(c => c._id as ObjectId) })
+    await consultaRepository.deleteByDictados({ dictados: (await dictadoRepository.findAllByFilter({ materia: materia._id })).map(d => d._id as ObjectId) })
     await dictadoRepository.deleteByMateria({ materia: materia._id })
-
     res.status(200).send({ message: "Materia borrada con éxito", data: materia })
 }
 

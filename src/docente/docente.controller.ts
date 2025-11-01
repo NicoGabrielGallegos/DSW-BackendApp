@@ -5,10 +5,15 @@ import { isValidEmail } from "../shared/validations.js";
 import { hash } from "bcryptjs";
 import { ObjectId } from "mongodb";
 import { DictadoRepository } from "../dictado/dictado.repository.js";
+import { ConsultaRepository } from "../consulta/consulta.repository.js";
+import { InscripcionRepository } from "../inscripcion/inscripcion.repository.js";
 import { getSanitizedPaginationParams, getSanitizedSortingParams } from "../shared/controller.js";
+import { Consulta } from "../consulta/consulta.entity.js";
 
 const docenteRepository = new DocenteRepository()
 const dictadoRepository = new DictadoRepository()
+const consultaRepository = new ConsultaRepository()
+const inscripcionRepository = new InscripcionRepository()
 
 function extractInput(req: Request, _res: Response, next: NextFunction) {
     req.body.input = {
@@ -122,9 +127,9 @@ async function remove(req: Request, res: Response) {
         res.status(404).send({ message: "Docente no encontrado" })
         return
     }
-
+    await inscripcionRepository.deleteByConsultas({ consultas: (await consultaRepository.findAllByDocente({ docente: docente._id })).map(c => c._id as ObjectId) })
+    await consultaRepository.deleteByDictados({ dictados: (await dictadoRepository.findAllByFilter({ docente: docente._id })).map(d => d._id as ObjectId) })
     await dictadoRepository.deleteByDocente({ docente: docente._id })
-
     res.status(200).send({ message: "Docente borrado con éxito", data: docente })
 }
 
