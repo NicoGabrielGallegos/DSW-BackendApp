@@ -22,8 +22,13 @@ export class AdministradorRepository implements Repository<Administrador> {
         return undefined
     }
 
-    public async update(): Promise<Administrador | undefined> {
-        return undefined
+    public async update(filter: { id: string }, item: Administrador): Promise<Administrador | undefined> {
+        const _id = new ObjectId(filter.id)
+            return (
+                await administradores.findOneAndUpdate({ _id },
+                    { $set: item },
+                    { returnDocument: "after" })
+            ) || undefined
     }
 
     public async delete(filter: { id: string }): Promise<Administrador | undefined> {

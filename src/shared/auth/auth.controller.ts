@@ -5,7 +5,10 @@ import { isValidEmail } from "../validations.js"
 import { AlumnoRepository } from "../../alumno/alumno.repository.js"
 import { DocenteRepository } from "../../docente/docente.repository.js"
 import { AdministradorRepository } from "../../administrador/administrador.repository.js"
-import { compare } from "bcryptjs"
+import { compare, hash } from "bcryptjs"
+import { Alumno } from "../../alumno/alumno.entity.js"
+import { Docente } from "../../docente/docente.entity.js"
+import { Administrador } from "../../administrador/administrador.entity.js"
 
 export const PRIVATE_KEY = "private_key"
 
@@ -28,19 +31,14 @@ function auth(req: Request, res: Response, next: NextFunction) {
 
     const token = authHeader.split(" ")[1]
     try {
-        const decoded = jwt.verify(token, PRIVATE_KEY)
-
-        if (!req.body) req.body = {}
-        req.body.loggedUser = decoded
-
+        jwt.verify(token, PRIVATE_KEY)
         next()
     } catch (err) {
-
         res.status(401).send({ message: "Token inválido" })
     }
 }
 
-function extractInput(req: Request, res: Response, next: NextFunction) {
+function extractInputLogin(req: Request, res: Response, next: NextFunction) {
     req.body.input = {
         correo: req.body.correo,
         password: req.body.password
@@ -148,5 +146,88 @@ async function loginAdministrador(req: Request, res: Response) {
     res.json({ data: token })
 }
 
+function extractInputChangePassword(req: Request, res: Response, next: NextFunction) {
+    req.body.input = {
+        currentPassword: req.body.currentPassword,
+        newPassword: req.body.newPassword
+    }
 
-export { auth, extractInput, loginAlumno, loginDocente, loginAdministrador }
+    // Verificar que se ingresen tanto la contraseña actual como la contraseña nueva
+    if (!req.body.input.currentPassword || !req.body.input.newPassword) {
+        res.status(400).send({ message: "Entrada de datos incompleta " })
+        return
+    }
+
+    const authHeader = req.headers.authorization
+    if (!authHeader) {
+        res.status(401).send({ message: "No autorizado" })
+        return
+    }
+
+    const token = authHeader.split(" ")[1]
+    try {
+        const decoded = jwt.verify(token, PRIVATE_KEY)
+        req.body.decodedPayload = decoded
+        next()
+    } catch (err) {
+        res.status(401).send({ message: "Token inválido" })
+    }
+}
+
+async function changePassword(req: Request, res: Response) {
+    const { id, rol }: { id: ObjectId, rol: Rol } = req.body.decodedPayload.user
+    const { currentPassword, newPassword }: { currentPassword: string, newPassword: string } = req.body.input
+
+    let user: { password: string } | undefined
+    //Alumno | Docente | Administrador | undefined
+
+    switch (rol) {
+        case Rol.Alumno:
+            user = await alumnoRepository.findOne({ id: id.toString() })
+            break;
+        case Rol.Docente:
+            user = await docenteRepository.findOne({ id: id.toString() })
+            break;
+        case Rol.Administrador:
+            user = await administradorRepository.findOne({ id: id.toString() })
+            break;
+    }
+
+    if (!user) {
+        res.status(404).json({ message: "Usuario no encontrado" })
+        return
+    }
+
+    const isMatch = await compare(currentPassword, user.password)
+    if (!isMatch) {
+        res.status(401).json({ message: "Contraseña actual incorrecta" })
+        return
+    }
+
+    if (currentPassword === newPassword) {
+        res.status(401).json({ message: "La nueva contraseña debe ser diferente a la contraseña actual"})
+        return
+    }
+
+    const password = await hash(newPassword, 10)
+
+    switch (rol) {
+        case Rol.Alumno:
+            user = await alumnoRepository.update({ id: id.toString() }, { password } as Alumno)
+            break;
+        case Rol.Docente:
+            user = await docenteRepository.update({ id: id.toString() }, { password } as Docente)
+            break;
+        case Rol.Administrador:
+            user = await administradorRepository.update({ id: id.toString() }, { password } as Administrador)
+            break;
+    }
+
+    if (!user) {
+        res.status(404).send({ message: "Usuario no encontrado" })
+        return
+    }
+    res.status(201).send({ message: "Contraseña modificada con éxito", data: user })
+}
+
+export { auth, extractInputLogin, loginAlumno, loginDocente, loginAdministrador, extractInputChangePassword, changePassword }
